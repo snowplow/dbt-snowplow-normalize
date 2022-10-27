@@ -9,7 +9,7 @@ from typing import Union
 
 ## NOTE ##
 # vendorPrefix is not currently supported for prioritising specific registries
-# caching outside of each run is not currently support and as such cacheSize makes no difference
+# Caching outside of each run is not currently support and as such cacheSize makes no difference
 # This file will not delete any existing models if you change the config, these will need to be removed manually.
 
 ##############
@@ -19,43 +19,43 @@ config_help = """
 JSON Config file structure:
 {
     "config":{
-        "resolver_file_path": <required - string: relative path to your resolver config json>,
+        "resolver_file_path": <required - string: relative path to your resolver config json, or "default" to use iglucentral only>,
         "filtered_events_table_name": <optional - string: name of total events table, if not provided it will not be generated>,
         "users_table_name": <optional - string: name of users table, default events_users if user schema(s) provided>,
-        "validate_schemas": <optional - boolean: if you want to validate schemas loaded from each iglu or not, default true>,
-        "overwrite": <optional - boolean: overwrite exisiting model files or not, default true>,
+        "validate_schemas": <optional - boolean: if you want to validate schemas loaded from each iglu registry or not, default true>,
+        "overwrite": <optional - boolean: overwrite existing model files or not, default true>,
         "models_folder": <optional - string: folder under models/ to place the models, default snowplow_split_events>
     },
     "events":[
         {
             "event_name": <required - string: name of the event type, value of the event_name column in your warehouse>,
-            "event_columns": <optional (>=1 of) - list: list of strings of flat column names from the events table to include to include in the model>,
-            "self_describing_event_schema": <optional (>=1 of) - string: `iglu:com.` type url for the self-desctibing event to include in the model>,
-            "context_schemas": <optional (>=1 of) - list: list of strings of `iglu:com.` type url(s) for the context/entities to include in the model>,
-            "context_aliases": <optional - list: list of strings of prefix to the column alias for context/entities>,
+            "event_columns": <optional (>=1 of) - array: array of strings of flat column names from the events table to include to include in the model>,
+            "self_describing_event_schema": <optional (>=1 of) - string: `iglu:com.` type url for the self-describing event to include in the model>,
+            "context_schemas": <optional (>=1 of) - array: array of strings of `iglu:com.` type url(s) for the context/entities to include in the model>,
+            "context_aliases": <optional - array: array of strings of prefix to the column alias for context/entities>,
             "table_name": <optional - string: name of the model, default is the event_name and major version number>
         },
         {
             ...
         }
     ],
-    "users": <optional - list: list of strings of schemas for your user contexts to add to your users table as columns, if not provided will not generate users model>
+    "users": <optional - array: array of strings of schemas for your user contexts to add to your users table as columns, if not provided will not generate users model>
 }"""
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description = 'Produce dbt model files for splitting your Snowplow events table into 1 table per event.')
 parser.add_argument('config', help = 'relative path to your configuration file')
 parser.add_argument('--version', action='version',
-                    version='%(prog)s V0.0.1', help="Show program's version number and exit.")
-parser.add_argument('-v', '--verbose', dest = 'verbose', action = 'store_true', default = False, help = 'Verbose flag for the running of the tool')
-parser.add_argument('--dryRun', dest = 'dryRun', action = 'store_true', default = False, help ='Flag for a dry run (does not write to files).')
-parser.add_argument('--configHelp', dest = 'configHelp', action = 'version', version = config_help, help ='Prints information relating to the structure of the config file.')
+                    version='%(prog)s V0.0.1', help="show program's version number and exit.")
+parser.add_argument('-v', '--verbose', dest = 'verbose', action = 'store_true', default = False, help = 'verbose flag for the running of the tool')
+parser.add_argument('--dryRun', dest = 'dryRun', action = 'store_true', default = False, help ='flag for a dry run (does not write to files).')
+parser.add_argument('--configHelp', dest = 'configHelp', action = 'version', version = config_help, help = 'prints information relating to the structure of the config file.')
 
 args = parser.parse_args()
 
 ####################################
 # Check running from dbt proj root #
 ####################################
-if not os.path.isdir('./models/') or not os.path.isfile('dbt_project.yml'):
+if not os.path.isdir('models') or not os.path.isfile('dbt_project.yml'):
     raise FileNotFoundError('Not in a valid root dbt project folder, please run from the folder containing dbt_project.yml')
 
 
@@ -96,6 +96,7 @@ def get_types(jsonData: dict) -> list:
     for val in jsonData['properties'].values():
         if val.get('type') is not None:
             cur_type = val.get('type')
+            # If it is a list get the max based on the hierarchy e.g. int and str would be str
             types.append(max([cur_type] if isinstance(cur_type, str) else cur_type, key = lambda x: type_hierarchy[x]))
         elif val.get('enum') is not None:
             try:
@@ -234,7 +235,7 @@ with open(config_path, 'r') as f:
     config = json.load(f)
 
 if not validate_json(config, schema = config_schema, validate = True):
-    raise ValueError('Invalid config file format.')
+    raise ValueError('Invalid config file format, run with flag --configHelp for more information.')
 
 # Parse config values
 user_urls = config.get('users')
@@ -300,8 +301,8 @@ for repo in iglu_resolver_parsed.get('data').get('repositories'):
         repo_schemas = get_schema(parsed_uri.scheme + '://'+ repo_netloc + '/api/schemas')
     schemas_list[repo_uri] = repo_schemas
 
+# Organise list in order of priority
 schemas_list = {x[0]: x[1] for _, x in sorted(zip(priority, schemas_list.items()))}
-
 
 ######################
 # Produce each model #
@@ -385,7 +386,7 @@ for i in range(len(event_names)):
     # Write out to file
     model_name = event_name + '_' + sde_major_version if table_name is None else table_name
     model_names.append(model_name)
-    filename = f'./models/{models_folder}/' + model_name + '.sql'
+    filename = os.path.join('models', models_folder,  model_name + '.sql')
     verboseprint(f'Model content for {model_name}, saving to {filename}:')
     verboseprint(model_content)
     if not args.dryRun:
@@ -412,12 +413,12 @@ if filtered_events_table_name is not None:
 select
     event_id
     , collector_tstamp
-    , {event_name}
-    , {model} as event_table_name
+    , '{event_name}' as event_name
+    , '{model}' as event_table_name
 from 
     {{{{ ref('snowplow_web_base_events_this_run') }}}}
 where 
-    event_name = {event_name}
+    event_name = '{event_name}'
     and {{{{ snowplow_utils.is_run_with_new_events("snowplow_web") }}}}
         """
         if n != n_models -1:
@@ -425,7 +426,7 @@ where
 UNION ALL
 """
 
-    filename = f'./models/{models_folder}/' + filtered_events_table_name + '.sql'
+    filename = os.path.join('models', models_folder,  filtered_events_table_name + '.sql')
     verboseprint(f'Model content for {filtered_events_table_name}, saving to {filename}:')
     verboseprint(filtered_model_content)
     if not args.dryRun:
@@ -467,7 +468,7 @@ if user_urls is not None:
 ) }}}}
 """
 
-    filename = f'./models/{models_folder}/' + user_table_name + '.sql'
+    filename = os.path.join('models', models_folder,  user_table_name + '.sql')
     verboseprint(f'Model content for {user_table_name}, saving to {filename}:')
     verboseprint(users_model_content)
     if not args.dryRun:
