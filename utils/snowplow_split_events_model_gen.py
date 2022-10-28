@@ -24,7 +24,8 @@ JSON Config file structure:
         "users_table_name": <optional - string: name of users table, default events_users if user schema(s) provided>,
         "validate_schemas": <optional - boolean: if you want to validate schemas loaded from each iglu registry or not, default true>,
         "overwrite": <optional - boolean: overwrite existing model files or not, default true>,
-        "models_folder": <optional - string: folder under models/ to place the models, default snowplow_split_events>
+        "models_folder": <optional - string: folder under models/ to place the models, default snowplow_split_events>,
+        "materialization": <optional - string: the value for materialized in the model configs, default snowplow__incremental_materialization>
     },
     "events":[
         {
@@ -219,7 +220,7 @@ type_hierarchy = {
 # Hard coded default resolver and schemas to use before we have checked the resolver is valid
 default_resolver = {"schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1", "data": {"cacheSize": 500, "repositories": [{"name": "Iglu Central", "priority": 0, "vendorPrefixes": [ "com.snowplowanalytics" ], "connection": {"http": {"uri": "http://iglucentral.com"}}}]}}
 resolver_schema = {"description":"Schema for an Iglu resolver\'s configuration","properties":{"cacheSize":{"type":"number"},"cacheTtl":{"type":["integer","null"],"minimum":0},"repositories":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"priority":{"type":"number"},"vendorPrefixes":{"type":"array","items":{"type":"string"}},"connection":{"type":"object","oneOf":[{"properties":{"embedded":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"],"additionalProperties":False}},"required":["embedded"],"additionalProperties":False},{"properties":{"http":{"type":"object","properties":{"uri":{"type":"string","format":"uri"},"apikey":{"type":["string","null"]}},"required":["uri"],"additionalProperties":False}},"required":["http"],"additionalProperties":False}]}},"required":["name","priority","vendorPrefixes","connection"],"additionalProperties":False}}},"additionalProperties":False,"type":"object","required":["cacheSize","repositories"],"self":{"vendor":"com.snowplowanalytics.iglu","name":"resolver-config","format":"jsonschema","version":"1-0-3"},"$schema":"http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#"}
-config_schema = { "description": "Schema for an event split python script configuration", "properties": { "config": { "type": "object", "properties": { "resolver_file_path": { "type": "string" }, "filtered_events_table_name": { "type": "string" }, "users_table_name": { "type": "string" }, "validate_schemas": { "type": "boolean" }, "overwrite": { "type": "boolean" }, "models_folder": { "type": "string" } }, "required": [ "resolver_file_path" ], "additionalProperties": False }, "events": { "type": "array", "items": { "type": "object", "properties": { "event_name": { "type": "string" }, "event_columns": { "type": "array", "items": { "type": "string" } }, "self_describing_event_schema": { "type": "string" }, "context_schemas": { "type": "array", "items": { "type": "string" } }, "context_aliases": { "type": "array", "items": { "type": "string" } }, "table_name": { "type": "string" } }, "anyOf": [ { "required": [ "event_name", "self_describing_event_schema" ] }, { "required": [ "event_name", "context_schemas" ] }, { "required": [ "event_name", "event_columns" ] } ], "additionalProperties": False }, "minItems": 1 }, "users": { "type": "array", "items": { "type": "string" } } }, "additionalProperties": False, "type": "object", "required": [ "config", "events" ], "self": { "name": "splitter-config", "format": "jsonschema", "version": "1-0-3" } }
+config_schema = { "description": "Schema for an event split python script configuration", "properties": { "config": { "type": "object", "properties": { "resolver_file_path": { "type": "string" }, "filtered_events_table_name": { "type": "string" }, "users_table_name": { "type": "string" }, "validate_schemas": { "type": "boolean" }, "overwrite": { "type": "boolean" }, "models_folder": { "type": "string" }, "materialization": { "type": "string" } }, "required": [ "resolver_file_path" ], "additionalProperties": False }, "events": { "type": "array", "items": { "type": "object", "properties": { "event_name": { "type": "string" }, "event_columns": { "type": "array", "items": { "type": "string" } }, "self_describing_event_schema": { "type": "string" }, "context_schemas": { "type": "array", "items": { "type": "string" } }, "context_aliases": { "type": "array", "items": { "type": "string" } }, "table_name": { "type": "string" } }, "anyOf": [ { "required": [ "event_name", "self_describing_event_schema" ] }, { "required": [ "event_name", "context_schemas" ] }, { "required": [ "event_name", "event_columns" ] } ], "additionalProperties": False }, "minItems": 1 }, "users": { "type": "array", "items": { "type": "string" } } }, "additionalProperties": False, "type": "object", "required": [ "config", "events" ], "self": { "name": "splitter-config", "format": "jsonschema", "version": "1-0-0" } } 
 
 #######################
 # Load + Parse config #
@@ -257,6 +258,7 @@ for event in config.get('events'):
 
 # Set defaults if they don't exist
 validate_schemas = config.get('config').get('overwrite') or True
+materialization =  config.get('config').get('materialization') or 'snowplow__incremental_materialization'
 overwrite = config.get('config').get('overwrite') or True
 resolver_file_path = config.get('config').get('resolver_file_path')
 models_folder = config.get('config').get('models_folder') or 'snowplow_split_events'
@@ -313,6 +315,8 @@ for i in range(len(event_names)):
     sde_url = sde_urls[i]
     context_url = context_urls[i]
     flat_col = flat_cols[i]
+    # Remove columns already included
+    flat_col = list(set(flat_col).difference({'event_id', 'collector_tstamp'}))
     context_alias = context_aliases[i]
     table_name = table_names[i]
 
@@ -354,9 +358,18 @@ for i in range(len(event_names)):
     # Write model string
     model_content = f"""{{{{ config(
     tags = "snowplow_web_incremental",
-    materialized = var("snowplow__incremental_materialization"),
+    materialized = "{materialization}",
     unique_key = "event_id",
-    upsert_date_key = "collector_tstamp"
+    upsert_date_key = "collector_tstamp",
+    partition_by = snowplow_utils.get_partition_by(bigquery_partition_by={{
+      "field": "collector_tstamp",
+      "data_type": "timestamp"
+    }}, databricks_partition_by='collector_tstamp'),
+    sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
+    tblproperties={{
+      'delta.autoOptimize.optimizeWrite' : 'true',
+      'delta.autoOptimize.autoCompact' : 'true'
+    }}
 ) }}}}
 
 {{%- set event_name = "{event_name}" -%}}
@@ -399,12 +412,21 @@ for i in range(len(event_names)):
 if filtered_events_table_name is not None:
     verboseprint('Generating filtered events table model...')
     n_models = len(event_names)
-    filtered_model_content = """{{ config(
+    filtered_model_content = f"""{{{{ config(
     tags = "snowplow_web_incremental",
-    materialized = var("snowplow__incremental_materialization"),
+    materialized = "{materialization}",
     unique_key = "event_id",
-    upsert_date_key = "collector_tstamp"
-) }}
+    upsert_date_key = "collector_tstamp",
+    partition_by = snowplow_utils.get_partition_by(bigquery_partition_by={{
+      "field": "collector_tstamp",
+      "data_type": "timestamp"
+    }}, databricks_partition_by='collector_tstamp'),
+    sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
+    tblproperties={{
+      'delta.autoOptimize.optimizeWrite' : 'true',
+      'delta.autoOptimize.autoCompact' : 'true'
+    }}
+) }}}}
 """
 
     for n, (model, event_name) in enumerate(zip(model_names, event_names)):
@@ -452,9 +474,18 @@ if user_urls is not None:
 
     users_model_content = f"""{{{{ config(
     tags = "snowplow_web_incremental",
-    materialized = var("snowplow__incremental_materialization"),
+    materialized = "{materialization}",
     unique_key = "user_id",
-    upsert_date_key = "latest_collector_tstamp"
+    upsert_date_key = "latest_collector_tstamp",
+    partition_by = snowplow_utils.get_partition_by(bigquery_partition_by={{
+      "field": "latest_collector_tstamp",
+      "data_type": "timestamp"
+    }}, databricks_partition_by='latest_collector_tstamp'),
+    sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
+    tblproperties={{
+      'delta.autoOptimize.optimizeWrite' : 'true',
+      'delta.autoOptimize.autoCompact' : 'true'
+    }}
 ) }}}}
 
 {{%- set user_cols = {user_cols or []} -%}}

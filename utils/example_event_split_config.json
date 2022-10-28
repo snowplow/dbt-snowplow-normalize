@@ -5,13 +5,14 @@
         "users_table_name":"events_users",
         "validate_schemas": true,
         "overwrite": true,
-        "models_folder": "snowplow_split_events"
+        "models_folder": "snowplow_split_events",
+        "materialization": "snowplow_incremental"
     },
     "events":[
         {
             "event_name": "event_name",
             "event_columns": [
-                "collector_tstamp",
+                "domain_userid",
                 "app_id"
             ],
             "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
@@ -25,7 +26,7 @@
         {
             "event_name": "event_name2",
             "event_columns": [
-                "collector_tstamp",
+                "domain_userid",
                 "app_id"
             ],
             "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
