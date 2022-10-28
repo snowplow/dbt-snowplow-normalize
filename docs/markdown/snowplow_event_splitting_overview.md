@@ -16,7 +16,7 @@ This package consists of two macros, a python script, and some example configura
 
   - `split_events` _(macro)_: This macro does the heavy lifting of the package, taking a series of inputs to generate the SQL required to split the events table and flatten (1 level) of any [self-describing event][self-desc-events] or [context][sp-contexts] columns. While you can use this macro manually it is recommended to create the models that use it by using the script provided.
 
-  - `users_table` _(macro)_: This macro takes a series of inputs to generate the SQL that will produce your users table, using the `user_id` column and any custom contexts from your events table.
+  - `users_table` _(macro)_: This macro takes a series of inputs to generate the SQL that will produce your users table (1 row per user, with the latest values of the contexts you specify as the other columns), using the `user_id` column and any custom contexts from your events table.
 
   - `snowplow_split_events_model_gen.py` _(script)_: This script uses an input configuration to generate your per-event models based on the schemas used to generate those events in the first place. See the [operation docs][splitting-operation] section for more information.
     ```yml
@@ -29,17 +29,15 @@ This package consists of two macros, a python script, and some example configura
 
     optional arguments:
     -h, --help     show this help message and exit
-    --version      Show program's version number and exit.
-    -v, --verbose  Verbose flag for the running of the tool
-    --dryRun       Flag for a dry run (does not write to files).
-    --configHelp   Prints information relating to the structure of the config file.
+    --version      show program's version number and exit.
+    -v, --verbose  verbose flag for the running of the tool
+    --dryRun       flag for a dry run (does not write to files).
+    --configHelp   prints information relating to the structure of the config file.
     ```
 
   - `example_event_split_config.json`: This file is an example of an input to the python script, showing all options and valid values. For additional information about the file structure run `python utils/snowplow_split_events_model_gen.py --configHelp` in your project root.
 
   - `example_resolver_config.json`: This file is an example [Iglu Resolver][iglu-resolver] configuration. It supports custom iglu servers with API keys, but does not currently support accessing embedded registries. For more information please see the Resolver docs.
-
-
 
 ## Installation
 
