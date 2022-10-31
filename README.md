@@ -9,9 +9,9 @@ This dbt package:
 - Provides macros to simplify the production of models that split Snowplow event data into a table per event type, plus a reduced events table and latest user context table, for easier integration with downstream tools.
 - Includes a python script to generate the models using a simple configuration file that uses the schemas used within your pipelines to identify the columns, to greatly reduce the upfront effort in creating these models.
 
-Please refer to the [doc site][snowplow-web-docs] for a full breakdown of the package.
+Please refer to the [doc site](https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/) for a full breakdown of the package.
 
-> Note that currently only data processed by the [Snowplow Web dbt package][https://github.com/snowplow/dbt-snowplow-web] is supported and any filters applied within this package will be also applied here e.g. `app_id`.
+> Note that currently only data processed by the [Snowplow Web dbt package](https://github.com/snowplow/dbt-snowplow-web) is supported and any filters applied within this package will be also applied here e.g. `app_id`.
 
 ### Adapter Support
 
@@ -26,7 +26,7 @@ The snowplow-event-splitter v0.1.0 package currently supports BigQuery, Databric
 
 - A dataset of web events from the [Snowplow JavaScript tracker][tracker-docs] must be available in the database.
 - Have the [`webPage` context][webpage-context] enabled.
-- The [Snowplow Web dbt package][https://github.com/snowplow/dbt-snowplow-web]
+- The [Snowplow Web dbt package](https://github.com/snowplow/dbt-snowplow-web)
 
 ### Installation
 

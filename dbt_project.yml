@@ -13,7 +13,3 @@ target-path: "target"
 clean-targets:
   - "target"
   - "dbt_packages"
-
-vars:
-  snowplow_event_splitting:
-    snowplow__incremental_materialization: "snowplow_incremental"
