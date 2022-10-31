@@ -5,8 +5,7 @@
         "users_table_name":"events_users",
         "validate_schemas": true,
         "overwrite": true,
-        "models_folder": "snowplow_split_events",
-        "materialization": "snowplow_incremental"
+        "models_folder": "snowplow_split_events"
     },
     "events":[
         {
