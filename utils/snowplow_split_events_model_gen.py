@@ -101,9 +101,9 @@ for repo in iglu_resolver_parsed.get('data').get('repositories'):
     repo_keys[repo_netloc] = repo.get('connection').get('http').get('apikey')
     # Get all schemas in each repo 
     if repo_keys[repo_netloc] is None:
-        repo_schemas = get_schema(parsed_uri.scheme + '://'+ repo_netloc + '/schemas')
+        repo_schemas = get_schema(parsed_uri.scheme + '://'+ repo_netloc + '/schemas', repo_keys)
     else:
-        repo_schemas = get_schema(parsed_uri.scheme + '://'+ repo_netloc + '/api/schemas')
+        repo_schemas = get_schema(parsed_uri.scheme + '://'+ repo_netloc + '/api/schemas', repo_keys)
     schemas_list[repo_uri] = repo_schemas
 
 # Organise list in order of priority
@@ -139,7 +139,7 @@ for i in range(len(event_names)):
     if sde_url is not None:
         # Parse the input URL then get parse and validate schemas for sde
         sde_url_cut = urlparse(sde_url).path
-        sde_json = get_schema(parse_schema_url(sde_url, schemas_list, repo_keys))
+        sde_json = get_schema(parse_schema_url(sde_url, schemas_list, repo_keys), repo_keys)
         if not validate_json(sde_json, validate = validate_schemas, schemas_list = schemas_list, repo_keys = repo_keys):
             raise ValueError(f'Validation of schema {sde_url} failed.')
         # Generate final form data for insert into model
@@ -154,7 +154,7 @@ for i in range(len(event_names)):
     if context_url is not None:
         # Parse the input URL then get parse and validate schemas for contexts
         context_url_cut = [urlparse(url).path for url in context_url]
-        context_jsons = [get_schema(parse_schema_url(url, schemas_list, repo_keys)) for url in context_url]
+        context_jsons = [get_schema(parse_schema_url(url, schemas_list, repo_keys), repo_keys) for url in context_url]
         for i, context_json in enumerate(context_jsons):
             if not validate_json(context_json, validate = validate_schemas, schemas_list = schemas_list, repo_keys = repo_keys):
                 raise ValueError(f'Validation of schema {context_url[i]} failed.')
@@ -274,7 +274,7 @@ else:
 if user_urls is not None:
     verboseprint('Generating users table model...')
     user_url_cut = [urlparse(url).path for url in user_urls]
-    user_jsons = [get_schema(parse_schema_url(url, schemas_list, repo_keys)) for url in user_urls]
+    user_jsons = [get_schema(parse_schema_url(url, schemas_list, repo_keys), repo_keys) for url in user_urls]
     for i, user_json in enumerate(user_jsons):
         if not validate_json(user_json, validate = validate_schemas, schemas_list = schemas_list, repo_keys = repo_keys):
             raise ValueError(f'Validation of schema {user_urls[i]} failed.')

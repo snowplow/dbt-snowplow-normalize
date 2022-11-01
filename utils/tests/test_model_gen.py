@@ -1,5 +1,5 @@
 import pytest
-from utils.snowplow_model_gen_funcs import *
+from utils.functions.snowplow_model_gen_funcs import *
 
 @pytest.mark.parametrize("test_input,expected", [
     ("com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1", "COM_SNOWPLOWANALYTICS_SNOWPLOW_LINK_CLICK_1_0_1"),
@@ -10,7 +10,7 @@ def test_url_to_column(test_input, expected):
     assert url_to_column(test_input) == expected
 
 class Test_types:
-    def test_get_types():
+    def test_get_types(self):
         input = {'properties': {
             'col1': {'type': ['null', 'number']}, # 2 types including null
             'col2': {'type': "number"}, # single type
@@ -27,11 +27,11 @@ class Test_types:
 
         assert get_types(input) == output
 
-    def test_get_types_raises():
+    def test_get_types_raises(self):
         with pytest.raises(ValueError):
             get_types({'properties': {'col': {'typo': ['null', 'Number']}}})
     
-    def test_type_hierarchy():
+    def test_type_hierarchy(self):
         assert sorted(type_hierarchy.keys(), key = lambda x: type_hierarchy[x]) == ['null', 'boolean', 'integer', 'number', 'array', 'object', 'string']
 
 class Test_parse_args:
@@ -144,11 +144,29 @@ class Test_validate_json:
 
     def test_get_schema(self):
         jsonData = {"schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1", "data": {"cacheSize": 500, "repositories": [{"name": "Iglu Central", "priority": 0, "vendorPrefixes": [ "com.snowplowanalytics" ], "connection": {"http": {"uri": "http://iglucentral.com"}}}]}}
-        assert validate_json(jsonData.get('data'), { 'http://iglucentral.com': ['iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1']}, 
-        {'iglucentral.com': None})
-class Test_get_schema:
-    pass
+        assert validate_json(jsonData, 
+                            schemas_list = { 'http://iglucentral.com': ['iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1']}, 
+                            repo_keys = {'iglucentral.com': None})
 
-class Test_cleanup_models:
-    pass
+    def test_no_input_error(self):
+        with pytest.raises(ValueError):
+            jsonData = {"schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1", "data": {"cacheSize": 500, "repositories": [{"name": "Iglu Central", "priority": 0, "vendorPrefixes": [ "com.snowplowanalytics" ], "connection": {"http": {"uri": "http://iglucentral.com"}}}]}}
+            validate_json(jsonData)
     
+    def test_no_schema_error(self):
+        with pytest.raises(ValueError):
+            jsonData = {"schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1", "data": {"cacheSize": 500, "repositories": [{"name": "Iglu Central", "priority": 0, "vendorPrefixes": [ "com.snowplowanalytics" ], "connection": {"http": {"uri": "http://iglucentral.com"}}}]}}
+            validate_json(jsonData.get('data'), 
+                            schemas_list = { 'http://iglucentral.com': ['iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1']}, 
+                            repo_keys = {'iglucentral.com': None})
+
+class Test_get_schema:
+    def test_public_repo(self):
+        got_schema = get_schema('http://iglucentral.com/schemas/com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', {})
+        expected = {"description":"Schema for a link click event","properties":{"elementId":{"type":"string"},"elementClasses":{"type":"array","items":{"type":"string"}},"elementTarget":{"type":"string"},"targetUrl":{"type":"string","minLength":1},"elementContent":{"type":"string"}},"additionalProperties":False,"type":"object","required":["targetUrl"],"self":{"vendor":"com.snowplowanalytics.snowplow","name":"link_click","format":"jsonschema","version":"1-0-1"},"$schema":"http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#"}
+        assert got_schema == expected
+    
+    def test_use_cache(self):
+        got_schema = get_schema('http://iglucentral.com/schemas/com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', {})
+        got_schema2 = get_schema('http://iglucentral.com/schemas/com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', {})
+        assert got_schema == got_schema2
