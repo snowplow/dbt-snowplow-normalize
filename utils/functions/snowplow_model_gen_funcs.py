@@ -6,6 +6,7 @@ import os
 from urllib.parse import urlparse
 import json
 import argparse
+import copy
 
 verboseprint = lambda *a, **k: None
 
@@ -136,20 +137,21 @@ def validate_json(jsonData: dict, schema: dict = None, validate: bool = True, sc
     Returns:
         bool: If the jsonData validated succfully against the schema or not
     """
+    json_copy = copy.deepcopy(jsonData)
     if validate:
         verboseprint('Validating JSON structure...')
         if schema is None: # Need to have passed a full JSON with scehma and self information
             if schemas_list is None or repo_keys is None:
                 raise ValueError('No schema provided, you must provide schema_list and repo_keys in this case.')
-            schema_url = jsonData.get('$schema') or jsonData.get('schema')
+            schema_url = json_copy.get('$schema') or json_copy.get('schema')
             if schema_url is None:
                 raise ValueError(f'$schema not present in JSON and no schema provided to validate against.')
             parsed_schema = parse_schema_url(schema_url, schemas_list, repo_keys)
             schema = get_schema(parsed_schema, repo_keys)
-            if jsonData.get('schema') is not None:
-                jsonData = jsonData.get('data')
+            if json_copy.get('schema') is not None:
+                json_copy = json_copy.get('data')
         try:
-            jsonschema.validate(instance=jsonData, schema=schema)
+            jsonschema.validate(instance=json_copy, schema=schema)
         except jsonschema.exceptions.ValidationError as err:
             warnings.warn(str(err))
             return False
