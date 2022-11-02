@@ -146,7 +146,8 @@ def validate_json(jsonData: dict, schema: dict = None, validate: bool = True, sc
                 raise ValueError(f'$schema not present in JSON and no schema provided to validate against.')
             parsed_schema = parse_schema_url(schema_url, schemas_list, repo_keys)
             schema = get_schema(parsed_schema, repo_keys)
-            jsonData = jsonData.get('data')
+            if jsonData.get('schema') is not None:
+                jsonData = jsonData.get('data')
         try:
             jsonschema.validate(instance=jsonData, schema=schema)
         except jsonschema.exceptions.ValidationError as err:

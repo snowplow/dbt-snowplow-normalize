@@ -1,5 +1,5 @@
 import sys
-from snowplow_model_gen_funcs import *
+from functions.snowplow_model_gen_funcs import *
 
 ## NOTE ##
 # vendorPrefix is not currently supported for prioritising specific registries
