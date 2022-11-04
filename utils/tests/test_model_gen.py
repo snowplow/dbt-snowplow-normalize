@@ -1,5 +1,17 @@
 import pytest
+import uuid
+import shutil
+import re
 from utils.functions.snowplow_model_gen_funcs import *
+
+def pop2(list, i):
+    list.pop(i)
+    return list
+
+def pop3(list, i):
+    for j in i:
+        list.pop(j)
+    return list
 
 @pytest.mark.parametrize("test_input,expected", [
     ("com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1", "COM_SNOWPLOWANALYTICS_SNOWPLOW_LINK_CLICK_1_0_1"),
@@ -170,3 +182,356 @@ class Test_get_schema:
         got_schema = get_schema('http://iglucentral.com/schemas/com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', {})
         got_schema2 = get_schema('http://iglucentral.com/schemas/com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', {})
         assert got_schema == got_schema2
+
+class Test_cleanup_models:
+    @pytest.fixture(scope='function')
+    def setup_teardown(self):
+        # Due to the cleanup function accessing the models folder we need
+        # to actually test this on files in that folder so can't use a temp
+        # directory to do the testing
+        
+        # Generate folder and file names - use uuids so it's obvious to
+        # delete them if anything goes wrong and they are left over
+        keep_folder = str(uuid.uuid4())
+        model_folder = str(uuid.uuid4())
+        # Make directories
+        os.makedirs(os.path.join('models', keep_folder))
+        os.makedirs(os.path.join('models', model_folder))
+
+        # Generate a list of fake model file names, first numbers are file/generated numbers, second is input ranges
+        # Ordering is not ideal given the misalignment between lists, but it works.
+        # 0-4 (.-.): user models in different folder, don't delete
+        # 5-9 (0-4): table_name provided models
+        # 10-14 (5-9): event_name models, with sdes
+        # 15-20 (10-14): event_name models, no sde, version provided
+        # 20-24 (15-20): event name models, no sde, no version provided
+        # 25-40 (20-35): extra models in config that don't exist (not in filename list)
+        # 40 (.) user table
+        # 41 (.) filtered table
+        generated_names = [str(uuid.uuid4()) for i in range(42)]
+        sde_urls_fixed = ["iglu:com.snowplowanalytics.snowplow/test/jsonschema/9-0-0",
+                    "iglu:com.snowplowanalytics.snowplow/test/jsonschema/2-0-0",
+                    "iglu:com.snowplowanalytics.snowplow/test/jsonschema/9-5-9",
+                    "iglu:com.snowplowanalytics.snowplow/test/jsonschema/3-0-0",
+                    "iglu:com.snowplowanalytics.snowplow/test/jsonschema/5-4-3"]
+        sde_url_versions = ['9', '2', '9', '3', '5']
+        versions_fixed = ['6', '2', '9', '8', '0']
+        users_table = generated_names[40]
+        filtered_table = generated_names[41]
+        event_names = []
+        sde_urls = []
+        versions = []
+        table_names = []
+        file_names = []
+        for i, name in enumerate(generated_names):
+            # user models in different folder, don't delete
+            if i >= 0 and i < 5: 
+                filename = os.path.join('models', keep_folder, name + '.sql')
+                file_names.append(filename)
+                with open(filename, 'w'):
+                    pass
+            
+            # table_name provided models
+            elif i >= 5 and i < 10: 
+                event_names.append('Does not matter ' + str(i))
+                sde_urls.append(None)
+                versions.append(None)
+                table_names.append(name)
+                filename = os.path.join('models', model_folder, name + '.sql')
+                file_names.append(filename)
+                with open(filename, 'w'):
+                    pass
+
+            # event_name models, with sdes
+            elif i >= 10 and i < 15: 
+                event_names.append(name)
+                sde_urls.append(sde_urls_fixed[i - 10])
+                versions.append(sde_url_versions[i - 10])
+                table_names.append(None)
+                filename = os.path.join('models', model_folder, name + '_' + sde_url_versions[i - 10] + '.sql')
+                file_names.append(filename)
+                with open(filename, 'w'):
+                    pass
+            
+            # event_name models, no sde, version provided
+            elif i >= 15 and i < 20: 
+                event_names.append(name)
+                sde_urls.append(None)
+                versions.append(versions_fixed[i - 15])
+                table_names.append(None)
+                filename = os.path.join('models', model_folder, name + '_' + versions_fixed[i - 15] + '.sql')
+                file_names.append(filename)
+                with open(filename, 'w'):
+                    pass
+            
+            # event name models, no sde, no version provided
+            elif i >= 20 and i < 25: 
+                event_names.append(name)
+                sde_urls.append(None)
+                versions.append(None)
+                table_names.append(None)
+                filename = os.path.join('models', model_folder, name + '_1.sql')
+                file_names.append(filename)
+                with open(filename, 'w'):
+                    pass
+            
+            # extra models in config that don't exist on sysmte
+            elif i >= 25 and i < 40: 
+                event_names.append('Does not matter' + str(i))
+                sde_urls.append(None)
+                versions.append(None)
+                table_names.append(name)
+        
+        # write the user and filtered table files
+        filename = os.path.join('models', model_folder, users_table + '.sql')
+        file_names.append(filename)
+        with open(filename, 'w'):
+            pass
+        filename = os.path.join('models', model_folder, filtered_table + '.sql')
+        file_names.append(filename)
+        with open(filename, 'w'):
+            pass
+
+        to_pass = {'keep_folder': keep_folder,
+            'model_folder': model_folder,
+            'event_names': event_names,
+            'sde_urls': sde_urls,
+            'versions': versions,
+            'table_names': table_names,
+            'users_table': users_table,
+            "filtered_table":filtered_table,
+            "file_names": file_names
+            }
+        yield to_pass
+
+        # teardown code
+        shutil.rmtree(os.path.join('models', keep_folder))
+        shutil.rmtree(os.path.join('models', model_folder))
+    
+    # Keep all files in faked config input, expect none to delete
+    def test_none_to_del(self, setup_teardown, capfd):
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            cleanup_models(
+                event_names = setup_teardown.get('event_names'),
+                sde_urls = setup_teardown.get('sde_urls'),
+                versions = setup_teardown.get('versions'),
+                table_names= setup_teardown.get('table_names'),
+                models_folder= setup_teardown.get('model_folder'),
+                user_table_name= setup_teardown.get('users_table'),
+                filtered_events_table_name= setup_teardown.get('filtered_table'),
+                dry_run= False
+            )
+        out, err = capfd.readouterr()
+        k_files = os.listdir(os.path.join('models', setup_teardown.get('keep_folder')))
+        k_files = [os.path.join('models', setup_teardown.get('keep_folder'), file) for file in k_files]
+        m_files = os.listdir(os.path.join('models', setup_teardown.get('model_folder')))
+        m_files = [os.path.join('models', setup_teardown.get('model_folder'), file) for file in m_files]
+        files = k_files + m_files
+        expected_files = setup_teardown.get('file_names')
+        assert out == 'No models to clean up, quitting...\n'
+        assert set(files) == set(expected_files)
+
+    # remove one file (named table), decline, expect all files remain
+    def test_decline_del_n(self, setup_teardown, monkeypatch, capfd):
+        # monkeypatch the "input" function, so that it returns "n".
+        # This simulates the user entering "n" in the terminal:
+        monkeypatch.setattr('builtins.input', lambda _: "n")
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            cleanup_models(
+                event_names = pop2(setup_teardown.get('event_names'), 0),
+                sde_urls = pop2(setup_teardown.get('sde_urls'), 0),
+                versions = pop2(setup_teardown.get('versions'), 0),
+                table_names= pop2(setup_teardown.get('table_names'), 0),
+                models_folder= setup_teardown.get('model_folder'),
+                user_table_name= setup_teardown.get('users_table'),
+                filtered_events_table_name= setup_teardown.get('filtered_table'),
+                dry_run= False
+            )
+        out, err = capfd.readouterr()
+        k_files = os.listdir(os.path.join('models', setup_teardown.get('keep_folder')))
+        k_files = [os.path.join('models', setup_teardown.get('keep_folder'), file) for file in k_files]
+        m_files = os.listdir(os.path.join('models', setup_teardown.get('model_folder')))
+        m_files = [os.path.join('models', setup_teardown.get('model_folder'), file) for file in m_files]
+        files = k_files + m_files
+        expected_files = setup_teardown.get('file_names')
+        assert re.match(r'^Cleanup will remove models: {.*}\s*$', out.split('\n')[0])
+        assert re.match(r'^Models not deleted\.\s*$', out.split('\n')[1])
+        assert set(files) == set(expected_files)
+
+    # remove one file (named table), decline, expect all files remain
+    def test_dry_run(self, setup_teardown, monkeypatch, capfd):
+        # monkeypatch the "input" function, so that it returns "n".
+        # This simulates the user entering "n" in the terminal:
+        monkeypatch.setattr('builtins.input', lambda _: "n")
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            cleanup_models(
+                event_names = pop3(setup_teardown.get('event_names'), [0, 4, 8, 12]),
+                sde_urls = pop3(setup_teardown.get('sde_urls'), [0, 4, 8, 12]),
+                versions = pop3(setup_teardown.get('versions'), [0, 4, 8, 12]),
+                table_names= pop3(setup_teardown.get('table_names'), [0, 4, 8, 12]),
+                models_folder= setup_teardown.get('model_folder'),
+                user_table_name= setup_teardown.get('users_table'),
+                filtered_events_table_name= setup_teardown.get('filtered_table'),
+                dry_run= False
+            )
+        out, err = capfd.readouterr()
+        k_files = os.listdir(os.path.join('models', setup_teardown.get('keep_folder')))
+        k_files = [os.path.join('models', setup_teardown.get('keep_folder'), file) for file in k_files]
+        m_files = os.listdir(os.path.join('models', setup_teardown.get('model_folder')))
+        m_files = [os.path.join('models', setup_teardown.get('model_folder'), file) for file in m_files]
+        files = k_files + m_files
+        expected_files = setup_teardown.get('file_names')
+        assert re.match(r'^Cleanup will remove models: {.*}\s*$', out.split('\n')[0])
+        assert re.match(r'^Models not deleted\.\s*$', out.split('\n')[1])
+        assert set(files) == set(expected_files)
+
+    # remove one file (named table), bad input, expect all files remain
+    def test_decline_del_random(self, setup_teardown, monkeypatch, capfd):
+        monkeypatch.setattr('builtins.input', lambda _: "3")
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            cleanup_models(
+                event_names = pop2(setup_teardown.get('event_names'), 0),
+                sde_urls = pop2(setup_teardown.get('sde_urls'), 0),
+                versions = pop2(setup_teardown.get('versions'), 0),
+                table_names= pop2(setup_teardown.get('table_names'), 0),
+                models_folder= setup_teardown.get('model_folder'),
+                user_table_name= setup_teardown.get('users_table'),
+                filtered_events_table_name= setup_teardown.get('filtered_table'),
+                dry_run= False
+            )
+        out, err = capfd.readouterr()
+        k_files = os.listdir(os.path.join('models', setup_teardown.get('keep_folder')))
+        k_files = [os.path.join('models', setup_teardown.get('keep_folder'), file) for file in k_files]
+        m_files = os.listdir(os.path.join('models', setup_teardown.get('model_folder')))
+        m_files = [os.path.join('models', setup_teardown.get('model_folder'), file) for file in m_files]
+        files = k_files + m_files
+        expected_files = setup_teardown.get('file_names')
+        assert re.match(r'^Cleanup will remove models: {.*}\s*$', out.split('\n')[0])
+        assert re.match(r'^Models not deleted\.\s*$', out.split('\n')[1])
+        assert set(files) == set(expected_files)
+
+    # remove one file (named table), lowercase input, expect all files remain
+    def test_decline_del_lowercase(self, setup_teardown, monkeypatch, capfd):
+        monkeypatch.setattr('builtins.input', lambda _: "y")
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            cleanup_models(
+                event_names = pop2(setup_teardown.get('event_names'), 0),
+                sde_urls = pop2(setup_teardown.get('sde_urls'), 0),
+                versions = pop2(setup_teardown.get('versions'), 0),
+                table_names= pop2(setup_teardown.get('table_names'), 0),
+                models_folder= setup_teardown.get('model_folder'),
+                user_table_name= setup_teardown.get('users_table'),
+                filtered_events_table_name= setup_teardown.get('filtered_table'),
+                dry_run= False
+            )
+        out, err = capfd.readouterr()
+        k_files = os.listdir(os.path.join('models', setup_teardown.get('keep_folder')))
+        k_files = [os.path.join('models', setup_teardown.get('keep_folder'), file) for file in k_files]
+        m_files = os.listdir(os.path.join('models', setup_teardown.get('model_folder')))
+        m_files = [os.path.join('models', setup_teardown.get('model_folder'), file) for file in m_files]
+        files = k_files + m_files
+        expected_files = setup_teardown.get('file_names')
+        assert re.match(r'^Cleanup will remove models: {.*}\s*$', out.split('\n')[0])
+        assert re.match(r'^Models not deleted\.\s*$', out.split('\n')[1])
+        assert set(files) == set(expected_files)
+
+    # remove 3 tables from config, accept, expect all other files remain
+    # Delete 1 of each "type" of input, adjust the pop value as it happens in series
+    def test_accept_del_some(self, setup_teardown, monkeypatch, capfd):
+        monkeypatch.setattr('builtins.input', lambda _: "Y")
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            cleanup_models(
+                event_names = pop3(setup_teardown.get('event_names'), [0, 4, 8, 12]),
+                sde_urls = pop3(setup_teardown.get('sde_urls'), [0, 4, 8, 12]),
+                versions = pop3(setup_teardown.get('versions'), [0, 4, 8, 12]),
+                table_names= pop3(setup_teardown.get('table_names'), [0, 4, 8, 12]),
+                models_folder= setup_teardown.get('model_folder'),
+                user_table_name= setup_teardown.get('users_table'),
+                filtered_events_table_name= setup_teardown.get('filtered_table'),
+                dry_run= False
+            )
+        out, err = capfd.readouterr()
+        k_files = os.listdir(os.path.join('models', setup_teardown.get('keep_folder')))
+        k_files = [os.path.join('models', setup_teardown.get('keep_folder'), file) for file in k_files]
+        m_files = os.listdir(os.path.join('models', setup_teardown.get('model_folder')))
+        m_files = [os.path.join('models', setup_teardown.get('model_folder'), file) for file in m_files]
+        files = k_files + m_files
+        expected_files = pop3(setup_teardown.get('file_names'), [0+5, 4+5, 8+5, 12+5]) # add 5 to adjust for user models
+        assert re.match(r'^Cleanup will remove models: {.*}\s*$', out.split('\n')[0])
+        assert re.match(r'^Deleted 4 models, quitting...\s*$', out.split('\n')[1])
+        assert set(files) == set(expected_files)
+
+    # rename filtered events table
+    def test_accept_del_filtered(self, setup_teardown, monkeypatch, capfd):
+        monkeypatch.setattr('builtins.input', lambda _: "Y")
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            cleanup_models(
+                event_names = setup_teardown.get('event_names'),
+                sde_urls = setup_teardown.get('sde_urls'),
+                versions = setup_teardown.get('versions'), 
+                table_names= setup_teardown.get('table_names'),
+                models_folder= setup_teardown.get('model_folder'),
+                user_table_name= setup_teardown.get('users_table'),
+                filtered_events_table_name= 'dummy_name',
+                dry_run= False
+            )
+        out, err = capfd.readouterr()
+        k_files = os.listdir(os.path.join('models', setup_teardown.get('keep_folder')))
+        k_files = [os.path.join('models', setup_teardown.get('keep_folder'), file) for file in k_files]
+        m_files = os.listdir(os.path.join('models', setup_teardown.get('model_folder')))
+        m_files = [os.path.join('models', setup_teardown.get('model_folder'), file) for file in m_files]
+        files = k_files + m_files
+        expected_files = pop2(setup_teardown.get('file_names'), -1) 
+        assert re.match(r'^Cleanup will remove models: {.*}\s*$', out.split('\n')[0])
+        assert re.match(r'^Deleted 1 models, quitting...\s*$', out.split('\n')[1])
+        assert set(files) == set(expected_files)
+
+    # rename the events table
+    def test_accept_del_users(self, setup_teardown, monkeypatch, capfd):
+        monkeypatch.setattr('builtins.input', lambda _: "Y")
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            cleanup_models(
+                event_names = setup_teardown.get('event_names'),
+                sde_urls = setup_teardown.get('sde_urls'),
+                versions = setup_teardown.get('versions'), 
+                table_names= setup_teardown.get('table_names'),
+                models_folder= setup_teardown.get('model_folder'),
+                user_table_name= 'dummy_users',
+                filtered_events_table_name=  setup_teardown.get('filtered_table'),
+                dry_run= False
+            )
+        out, err = capfd.readouterr()
+        k_files = os.listdir(os.path.join('models', setup_teardown.get('keep_folder')))
+        k_files = [os.path.join('models', setup_teardown.get('keep_folder'), file) for file in k_files]
+        m_files = os.listdir(os.path.join('models', setup_teardown.get('model_folder')))
+        m_files = [os.path.join('models', setup_teardown.get('model_folder'), file) for file in m_files]
+        files = k_files + m_files
+        expected_files = pop2(setup_teardown.get('file_names'), -2) 
+        assert re.match(r'^Cleanup will remove models: {.*}\s*$', out.split('\n')[0])
+        assert re.match(r'^Deleted 1 models, quitting...\s*$', out.split('\n')[1])
+        assert set(files) == set(expected_files)
+
+    # Just delete everything to ensure it keeps the user custom models in the otehr folder
+    def test_accept_del_all(self, setup_teardown, monkeypatch, capfd):
+        monkeypatch.setattr('builtins.input', lambda _: "Y")
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            cleanup_models(
+                event_names = [],
+                sde_urls = [],
+                versions = [],
+                table_names= [],
+                models_folder= setup_teardown.get('model_folder'),
+                user_table_name= 'events_users',
+                filtered_events_table_name= '',
+                dry_run= False
+            )
+        out, err = capfd.readouterr()
+        k_files = os.listdir(os.path.join('models', setup_teardown.get('keep_folder')))
+        k_files = [os.path.join('models', setup_teardown.get('keep_folder'), file) for file in k_files]
+        m_files = os.listdir(os.path.join('models', setup_teardown.get('model_folder')))
+        m_files = [os.path.join('models', setup_teardown.get('model_folder'), file) for file in m_files]
+        files = k_files + m_files
+        expected_files = setup_teardown.get('file_names')[0:5]
+        assert re.match(r'^Cleanup will remove models: {.*}\s*$', out.split('\n')[0])
+        assert re.match(r'^Deleted 22 models, quitting...\s*$', out.split('\n')[1])
+        assert set(files) == set(expected_files)

@@ -38,6 +38,7 @@ if not validate_json(config, schema = config_schema, validate = True):
 
 # Parse config values
 user_urls = config.get('users')
+filtered_events_table_name = config.get('config').get('filtered_events_table_name')
 event_names = []
 sde_urls = []
 context_urls = []
@@ -61,7 +62,6 @@ validate_schemas = config.get('config').get('overwrite') or True
 overwrite = config.get('config').get('overwrite') or True
 resolver_file_path = config.get('config').get('resolver_file_path')
 models_folder = config.get('config').get('models_folder') or 'snowplow_split_events'
-filtered_events_table_name = config.get('config').get('filtered_events_table_name') or None
 user_table_name = config.get('config').get('users_table_name') or 'events_users'
 
 # Run Cleanup if required

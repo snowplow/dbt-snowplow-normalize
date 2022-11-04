@@ -27,6 +27,7 @@ jobs:
       run: |
         pip install pytest
         pip install pytest-cov
+        pip install uuid
         pytest utils/tests --doctest-modules --junitxml=junit/test-results.xml --cov=utils/functions --cov-report=xml:junit/coverage.xml
     - name: Pytest coverage comment
       uses: MishaKav/pytest-coverage-comment@main

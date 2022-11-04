@@ -173,9 +173,12 @@ def cleanup_models(event_names: list, sde_urls: list, versions: list, table_name
         dry_run (boolean): Do as a dry run or not
     """
     verboseprint('Starting cleanup...')
-    sde_major_versions = [sde_url.split('-')[0][-1] if sde_url is not None else version for sde_url, version in zip(sde_urls, versions)]
+    sde_major_versions = [sde_url.split('-')[0][-1] if sde_url is not None else version if version is not None else '1' for sde_url, version in zip(sde_urls, versions)]
     model_names = [event_name + '_' + sde_major_version if table_name is None else table_name for event_name, sde_major_version, table_name in zip(event_names, sde_major_versions, table_names)]
-    model_names.extend([user_table_name, filtered_events_table_name])
+    if filtered_events_table_name is not None:
+        model_names.extend([user_table_name, filtered_events_table_name])
+    else:
+        model_names.append(user_table_name)
 
     cur_models = os.listdir(os.path.join('models', models_folder))
     extra_models = set(cur_models).difference(set([model + '.sql' for model in model_names]))
@@ -188,7 +191,8 @@ def cleanup_models(event_names: list, sde_urls: list, versions: list, table_name
         for model in extra_models:
             verboseprint(f'Deleting file {model}...')
             os.remove(os.path.join('models', models_folder, model))
-        verboseprint(f'Deleted {len(extra_models)} models, quitting...')
+        print(f'Deleted {len(extra_models)} models, quitting...')
+        quit()
     else:
         print('Models not deleted.')
         quit()
