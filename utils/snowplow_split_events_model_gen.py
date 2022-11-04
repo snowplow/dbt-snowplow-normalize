@@ -178,7 +178,7 @@ for i in range(len(event_names)):
     partition_by = snowplow_utils.get_partition_by(bigquery_partition_by={{
       "field": "collector_tstamp",
       "data_type": "timestamp"
-    }}, databricks_partition_by='collector_tstamp'),
+    }}, databricks_partition_by='collector_tstamp_date'),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
     tblproperties={{
       'delta.autoOptimize.optimizeWrite' : 'true',
@@ -231,7 +231,7 @@ if filtered_events_table_name is not None:
     partition_by = snowplow_utils.get_partition_by(bigquery_partition_by={{
       "field": "collector_tstamp",
       "data_type": "timestamp"
-    }}, databricks_partition_by='collector_tstamp'),
+    }}, databricks_partition_by='collector_tstamp_date'),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
     tblproperties={{
       'delta.autoOptimize.optimizeWrite' : 'true',
@@ -246,6 +246,9 @@ if filtered_events_table_name is not None:
 select
     event_id
     , collector_tstamp
+    {{% if target.type in ['databricks', 'spark'] -%}}
+    , DATE(collector_tstamp) as collector_tstamp_date
+    {{%- endif %}}
     , '{event_name}' as event_name
     , '{model}' as event_table_name
 from 
@@ -291,7 +294,7 @@ if user_urls is not None:
     partition_by = snowplow_utils.get_partition_by(bigquery_partition_by={{
       "field": "latest_collector_tstamp",
       "data_type": "timestamp"
-    }}, databricks_partition_by='latest_collector_tstamp'),
+    }}, databricks_partition_by='latest_collector_tstamp_date'),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
     tblproperties={{
       'delta.autoOptimize.optimizeWrite' : 'true',
