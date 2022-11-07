@@ -100,7 +100,7 @@ where
 
 {% macro databricks__split_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
 
-{# Remove down to major version for Snowflake columns, drop 2 last _X values #}
+{# Remove down to major version for Databricks columns, drop 2 last _X values #}
 {%- set sde_col = '_'.join(sde_col.split('_')[:-2]) -%} 
 {%- set context_cols_clean = [] -%}
 {%- for ind in range(context_cols|length) -%}
@@ -127,6 +127,9 @@ where
 select
     event_id
     , collector_tstamp
+    {% if target.type in ['databricks', 'spark'] -%}
+    , DATE(collector_tstamp) as collector_tstamp_date
+    {%- endif %}
     -- Flat columns from event table
     {% if flat_cols|length > 0 %}
     {%- for col in flat_cols -%}

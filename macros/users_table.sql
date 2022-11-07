@@ -75,7 +75,7 @@ where
 
 {% macro databricks__users_table(user_cols, user_keys, user_types) %}
 
-{# Remove down to major version for Snowflake columns, drop 2 last _X values #}
+{# Remove down to major version for Databricks columns, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
     {% do user_cols_clean.append('_'.join(user_cols[ind].split('_')[:-2])) -%} 
@@ -98,6 +98,9 @@ with users_ordered as (
 select
     user_id
     , collector_tstamp as latest_collector_tstamp
+    {% if target.type in ['databricks', 'spark'] -%}
+    , DATE(collector_tstamp) as latest_collector_tstamp_date
+    {%- endif %}
     -- user column(s) from the event table
     {% if user_cols_clean|length > 0 %}
     {%- for col, col_ind in zip(user_cols_clean, range(user_cols_clean|length)) -%}
