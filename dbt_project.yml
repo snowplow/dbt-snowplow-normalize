@@ -1,5 +1,5 @@
 
-name: 'snowplow_event_splitting'
+name: 'snowplow_composable_events'
 version: '0.0.1'
 config-version: 2
 

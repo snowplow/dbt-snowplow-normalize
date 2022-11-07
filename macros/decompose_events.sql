@@ -1,8 +1,8 @@
-{% macro split_events(event_name, flat_cols = [], sde_col = '', sde_keys = [], sde_types = [], context_cols = [], context_keys = [], context_types = [], context_aliases = []) %}
-    {{ return(adapter.dispatch('split_events')(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases)) }}
+{% macro decompose_events(event_name, flat_cols = [], sde_col = '', sde_keys = [], sde_types = [], context_cols = [], context_keys = [], context_types = [], context_aliases = []) %}
+    {{ return(adapter.dispatch('decompose_events')(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases)) }}
 {% endmacro %}
 
-{% macro snowflake__split_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
+{% macro snowflake__decompose_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
 
 {# Remove down to major version for Snowflake columns, drop 2 last _X values #}
 {%- set sde_col = '_'.join(sde_col.split('_')[:-2]) -%} 
@@ -46,7 +46,7 @@ where
 {% endmacro %}
 
 
-{% macro bigquery__split_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
+{% macro bigquery__decompose_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
 {# Replace keys with snake_case where needed #}
 {% set re = modules.re %}
 {% set camel_string = '(?<!^)(?=[A-Z])'%}
@@ -98,7 +98,7 @@ where
     and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
 {% endmacro %}
 
-{% macro databricks__split_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
+{% macro databricks__decompose_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
 
 {# Remove down to major version for Databricks columns, drop 2 last _X values #}
 {%- set sde_col = '_'.join(sde_col.split('_')[:-2]) -%} 
