@@ -118,8 +118,8 @@ for i in range(len(event_names)):
     sde_url = sde_urls[i]
     version = versions[i]
     table_name = table_names[i]
-    sde_major_version = sde_url.split('-')[0][-1] if sde_url is not None else version
-    model_name = event_name + '_' + sde_major_version if table_name is None else table_name
+    sde_major_version = sde_url.split('-')[0][-1] if sde_url is not None else version if version is not None else '1'
+    model_name = event_name + '_' + sde_major_version if table_name is None else table_name + '_' + sde_major_version
     model_names.append(model_name)
     filename = os.path.join('models', models_folder,  model_name + '.sql')
 

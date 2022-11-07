@@ -20,7 +20,7 @@
                 "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0"
             ],
             "context_aliases": ["ua", "spiderbot"],
-            "table_name": "event_name_major",
+            "table_name": "custom_table_name",
             "version": "1"
         },
         {
@@ -35,7 +35,7 @@
                 "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0"
             ],
             "context_aliases": ["ua", "spiderbot"],
-            "table_name": "event_name_major2",
+            "table_name": "custom_table_name2",
             "version": "2"
         }
     ],

@@ -237,7 +237,7 @@ class Test_cleanup_models:
                 sde_urls.append(None)
                 versions.append(None)
                 table_names.append(name)
-                filename = os.path.join('models', model_folder, name + '.sql')
+                filename = os.path.join('models', model_folder, name + '_1.sql')
                 file_names.append(filename)
                 with open(filename, 'w'):
                     pass

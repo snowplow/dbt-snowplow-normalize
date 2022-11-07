@@ -174,7 +174,7 @@ def cleanup_models(event_names: list, sde_urls: list, versions: list, table_name
     """
     verboseprint('Starting cleanup...')
     sde_major_versions = [sde_url.split('-')[0][-1] if sde_url is not None else version if version is not None else '1' for sde_url, version in zip(sde_urls, versions)]
-    model_names = [event_name + '_' + sde_major_version if table_name is None else table_name for event_name, sde_major_version, table_name in zip(event_names, sde_major_versions, table_names)]
+    model_names = [event_name + '_' + sde_major_version if table_name is None else table_name + '_' + sde_major_version for event_name, sde_major_version, table_name in zip(event_names, sde_major_versions, table_names)]
     if filtered_events_table_name is not None:
         model_names.extend([user_table_name, filtered_events_table_name])
     else:
@@ -234,7 +234,7 @@ JSON Config file structure:
 {
     "config":{
         "resolver_file_path": <required - string: relative path to your resolver config json, or "default" to use iglucentral only>,
-        "filtered_events_table_name": <optional - string: name of total events table, if not provided it will not be generated>,
+        "filtered_events_table_name": <optional - string: name of filtered events table, if not provided it will not be generated>,
         "users_table_name": <optional - string: name of users table, default events_users if user schema(s) provided>,
         "validate_schemas": <optional - boolean: if you want to validate schemas loaded from each iglu registry or not, default true>,
         "overwrite": <optional - boolean: overwrite existing model files or not, default true>,
@@ -246,13 +246,13 @@ JSON Config file structure:
             "event_columns": <optional (>=1 of) - array: array of strings of flat column names from the events table to include to include in the model>,
             "self_describing_event_schema": <optional (>=1 of) - string: `iglu:com.` type url for the self-describing event to include in the model>,
             "context_schemas": <optional (>=1 of) - array: array of strings of `iglu:com.` type url(s) for the context/entities to include in the model>,
-            "context_aliases": <optional - array: array of strings of prefix to the column alias for context/entities>,
-            "table_name": <optional - string: name of the model, default is the event_name and major version number>,
-            "version": <optional - string (length 1): version number to append to default table name, if self_describing_event_schema is provided uses major version number from that, if table_name is provided this is not used, default 1>
+            "context_aliases": <optional - array: array of strings of prefixes to the column alias for context/entities>,
+            "table_name": <optional - string: name of the model, default is the event_name>,
+            "version": <optional - string (length 1): version number to append to table name, if self_describing_event_schema is provided uses major version number from that, default 1>
         },
         {
             ...
         }
     ],
-    "users": <optional - array: array of strings of schemas for your user contexts to add to your users table as columns, if not provided will not generate users model>
+    "users": <optional - array: array of strings of iglu:com. type url(s) for the context/entities to add to your users table as columns, if not provided will not generate users model>
 }"""
