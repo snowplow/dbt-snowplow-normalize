@@ -2,7 +2,7 @@ version: 2
 
 macros:
   - name: split_events
-    description: A macro to produce a table with the input columns for a single event type
+    description: A macro to produce a table from `base_events_this_run` with the input columns, for a single event type 
     arguments:
       - name: event_name
         type: string
@@ -32,7 +32,7 @@ macros:
         type: array
         description: List of prefixes to apply to the respective context column keys to be used as final column names
   - name: users_table
-    description: A macro to produce a users table from the atomic.events table
+    description: A macro to produce a users table from the `base_events_this_run` table, using the latest context values as defined by the collector_tstamp.
     arguments:
       - name: user_cols
         type: array

@@ -11,7 +11,7 @@ This dbt package:
 
 Please refer to the [doc site](https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/) for a full breakdown of the package.
 
-> Note that currently only data processed by the [Snowplow Web dbt package](https://github.com/snowplow/dbt-snowplow-web) is supported and any filters applied within this package will be also applied here e.g. `app_id`.
+> Note that currently only data processed by the [Snowplow Web dbt package](https://github.com/snowplow/dbt-snowplow-web) is supported and any filters applied within this package will also be applied here e.g. `app_id`.
 
 ### Adapter Support
 
@@ -43,9 +43,10 @@ This package doesn't contain any models directly, however it is used to produce 
 | Model                     | Description                                                                                |
 | ------------------------- | ------------------------------------------------------------------------------------------ |
 | event_name                | A table for each of your specified event names, with flat columns from self-describing events and contexts. |
-| filtered_events           | A table that contains the event_ids, collector_tstamp, event name, and the name of the table that those events have been split into. Note it doesn't contain events not split out into individual tables. |
+| filtered_events           | A table that contains the `event_id`s, `collector_tstamp`, event name, and the name of the table that those events have been split into. Note it doesn't contain events not split out into individual tables. |
 | event_users               | A table with the latest user context columns for any user_ids in your events table.  |
 
+For more detailed information, see the [doc site][snowplow-event-splitter-docs].
 # Join the Snowplow community
 
 We welcome all ideas, questions and contributions!
@@ -56,7 +57,7 @@ If you find a bug, please report an issue on GitHub.
 
 # Copyright and license
 
-The snowplow-event-splitting package is Copyright 2021-2022 Snowplow Analytics Ltd.
+The snowplow-event-splitting package is Copyright 2022 Snowplow Analytics Ltd.
 
 Licensed under the [Apache License, Version 2.0][license] (the "License");
 you may not use this software except in compliance with the License.

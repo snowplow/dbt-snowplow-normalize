@@ -12,36 +12,11 @@ Welcome to the model documentation site for the Snowplow Event Splitting dbt pac
 
 ## Overview
 
-This package consists of two macros, a python script, and some example configuration files to help you get started:
-
-  - `split_events` _(macro)_: This macro does the heavy lifting of the package, taking a series of inputs to generate the SQL required to split the events table and flatten (1 level) of any [self-describing event][self-desc-events] or [context][sp-contexts] columns. While you can use this macro manually it is recommended to create the models that use it by using the script provided.
-
-  - `users_table` _(macro)_: This macro takes a series of inputs to generate the SQL that will produce your users table (1 row per user, with the latest values of the contexts you specify as the other columns), using the `user_id` column and any custom contexts from your events table.
-
-  - `snowplow_split_events_model_gen.py` _(script)_: This script uses an input configuration to generate your per-event models based on the schemas used to generate those events in the first place. See the [operation docs][splitting-operation] section for more information.
-    ```yml
-    usage: snowplow_split_events_model_gen.py [-h] [--version] [-v] [--dryRun] [--configHelp] config
-
-    Produce dbt model files for splitting your Snowplow events table into 1 table per event.
-
-    positional arguments:
-    config         relative path to your configuration file
-
-    optional arguments:
-    -h, --help     show this help message and exit
-    --version      show program's version number and exit.
-    -v, --verbose  verbose flag for the running of the tool
-    --dryRun       flag for a dry run (does not write to files).
-    --configHelp   prints information relating to the structure of the config file.
-    ```
-
-  - `example_event_split_config.json`: This file is an example of an input to the python script, showing all options and valid values. For additional information about the file structure run `python utils/snowplow_split_events_model_gen.py --configHelp` in your project root.
-
-  - `example_resolver_config.json`: This file is an example [Iglu Resolver][iglu-resolver] configuration. It supports custom iglu servers with API keys, but does not currently support accessing embedded registries. For more information please see the Resolver docs.
+This package contains a python script that is designed to be used in conjunction with the macros provided to generate models that decompose the Snowplow `atomic.events` table into individual tables. For more information on usage and the design of the models produced, see the [Package Docs](https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/dbt-event-splitting-model).
 
 ## Installation
 
-Check [dbt Hub](https://hub.getdbt.com/snowplow/snowplow_web/latest/) for the latest installation instructions, or read the [dbt docs][dbt-package-docs] for more information on installing packages.
+Check [dbt Hub](https://hub.getdbt.com/snowplow/snowplow_event_splitting/latest/) for the latest installation instructions, or read the [dbt docs][dbt-package-docs] for more information on installing packages.
 
 # Join the Snowplow community
 
@@ -53,7 +28,7 @@ If you find a bug, please report an issue on GitHub.
 
 # Copyright and license
 
-The snowplow-web package is Copyright 2021-2022 Snowplow Analytics Ltd.
+The snowplow-web package is Copyright 2022 Snowplow Analytics Ltd.
 
 Licensed under the [Apache License, Version 2.0][license] (the "License");
 you may not use this software except in compliance with the License.
