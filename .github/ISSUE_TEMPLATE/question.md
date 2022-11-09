@@ -1,13 +1,13 @@
 ---
 name: Question
-about: A more general question about the package. Consider using discourse or discussions if more applicable.
+about: A more general question about the package. Consider using discourse if more applicable.
 title: ''
 labels: type:question
 assignees: ''
 
 ---
 
-<!-- Please consider if your question would be better placed on the Snowplow Discourse (https://discourse.snowplow.io/) or the Discussions page of this repo for more open conversations -->
+<!-- Please consider if your question would be better placed on the Snowplow Discourse (https://discourse.snowplow.io/) for more open conversations -->
 
 ### Question
 <!-- What is your question -->

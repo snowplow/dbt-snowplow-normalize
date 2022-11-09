@@ -99,7 +99,7 @@ for repo in iglu_resolver_parsed.get('data').get('repositories'):
     priority.append(repo.get('priority'))
     # Store the api key if it's needed, None if it doesn't exist
     repo_keys[repo_netloc] = repo.get('connection').get('http').get('apikey')
-    # Get all schemas in each repo 
+    # Get all schemas in each repo
     if repo_keys[repo_netloc] is None:
         repo_schemas = get_schema(parsed_uri.scheme + '://'+ repo_netloc + '/schemas', repo_keys)
     else:
@@ -133,9 +133,9 @@ for i in range(len(event_names)):
     context_url = context_urls[i]
     flat_col = flat_cols[i]
     # Remove columns already included
-    flat_col = list(set(flat_col).difference({'event_id', 'collector_tstamp'}))
+    flat_col = list(set(flat_col).difference({'event_id', 'collector_tstamp'})).sort()
     context_alias = context_aliases[i]
-    
+
     if sde_url is not None:
         # Parse the input URL then get parse and validate schemas for sde
         sde_url_cut = urlparse(sde_url).path
@@ -188,7 +188,7 @@ for i in range(len(event_names)):
 
 {{%- set event_name = "{event_name}" -%}}
 {{%- set flat_cols = {flat_col or []} -%}}
-{{%- set sde_col = "{sde_col or "''"}" -%}}
+{{%- set sde_col = "{sde_col or ""}" -%}}
 {{%- set sde_keys = {sde_keys or []} -%}}
 {{%- set sde_types = {sde_types or []} -%}}
 {{%- set context_cols = {context_cols or []} -%}}
@@ -251,9 +251,9 @@ select
     {{%- endif %}}
     , '{event_name}' as event_name
     , '{model}' as event_table_name
-from 
+from
     {{{{ ref('snowplow_web_base_events_this_run') }}}}
-where 
+where
     event_name = '{event_name}'
     and {{{{ snowplow_utils.is_run_with_new_events("snowplow_web") }}}}
         """

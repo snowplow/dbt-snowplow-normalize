@@ -7,7 +7,7 @@
 {# Remove down to major version for Snowflake columns, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
-    {% do user_cols_clean.append('_'.join(user_cols[ind].split('_')[:-2])) -%} 
+    {% do user_cols_clean.append('_'.join(user_cols[ind].split('_')[:-2])) -%}
 {%- endfor -%}
 
 select
@@ -26,7 +26,7 @@ from
 where
     user_id is not null
     and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
-qualify 
+qualify
     row_number() over (partition by user_id order by collector_tstamp desc) = 1
 {% endmacro %}
 
@@ -39,13 +39,13 @@ qualify
 {%- for ind1 in range(user_keys|length) -%}
     {%- set user_key_clean = [] -%}
     {%- for ind2 in range(user_keys[ind1]|length) -%}
-        {% do user_key_clean.append(re.sub(camel_string, '_', user_keys[ind1][ind2]).lower()) -%} 
+        {% do user_key_clean.append(re.sub(camel_string, '_', user_keys[ind1][ind2]).lower()) -%}
     {%- endfor -%}
-    {% do user_keys_clean.append(user_key_clean) -%} 
+    {% do user_keys_clean.append(user_key_clean) -%}
 {%- endfor -%}
 
 
-with users_ordered as (
+with users_ordering as (
 select
     user_id
     , collector_tstamp as latest_collector_tstamp
@@ -68,7 +68,7 @@ where
 select
     * except (rn)
 from
-    users_ordered
+    users_ordering
 where
     rn = 1
 {% endmacro %}
@@ -78,7 +78,7 @@ where
 {# Remove down to major version for Databricks columns, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
-    {% do user_cols_clean.append('_'.join(user_cols[ind].split('_')[:-2])) -%} 
+    {% do user_cols_clean.append('_'.join(user_cols[ind].split('_')[:-2])) -%}
 {%- endfor -%}
 
 {# Replace keys with snake_case where needed #}
@@ -88,13 +88,13 @@ where
 {%- for ind1 in range(user_keys|length) -%}
     {%- set user_key_clean = [] -%}
     {%- for ind2 in range(user_keys[ind1]|length) -%}
-        {% do user_key_clean.append(re.sub(camel_string, '_', user_keys[ind1][ind2]).lower()) -%} 
+        {% do user_key_clean.append(re.sub(camel_string, '_', user_keys[ind1][ind2]).lower()) -%}
     {%- endfor -%}
-    {% do user_keys_clean.append(user_key_clean) -%} 
+    {% do user_keys_clean.append(user_key_clean) -%}
 {%- endfor -%}
 
 
-with users_ordered as (
+with users_ordering as (
 select
     user_id
     , collector_tstamp as latest_collector_tstamp
@@ -120,7 +120,7 @@ where
 select
     * except (rn)
 from
-    users_ordered
+    users_ordering
 where
     rn = 1
 {% endmacro %}
