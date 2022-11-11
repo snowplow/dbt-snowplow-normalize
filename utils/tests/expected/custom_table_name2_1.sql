@@ -24,7 +24,7 @@
 {%- set context_types = [['string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string'], ['boolean', 'string', 'string', 'string']] -%}
 {%- set context_alias = ['ua_parser_context', 'spiders_and_robots'] -%}
 
-{{ split_events(
+{{ normalize_events(
     event_name,
     flat_cols,
     sde_col,
