@@ -2,6 +2,8 @@ import pytest
 import uuid
 import shutil
 import re
+from os import system
+import string
 from utils.functions.snowplow_model_gen_funcs import *
 
 def pop2(list, i):
@@ -13,6 +15,13 @@ def pop3(list, i):
         list.pop(j)
     return list
 
+def compare(s1, s2):
+    #https://stackoverflow.com/a/69564731
+    remove = string.whitespace
+    mapping = {ord(c): None for c in remove}
+    print(f'Mapping: \n{mapping}')
+    return s1.translate(mapping) == s2.translate(mapping)
+
 @pytest.mark.parametrize("test_input,expected", [
     ("com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1", "COM_SNOWPLOWANALYTICS_SNOWPLOW_LINK_CLICK_1_0_1"),
     ("COM.SNOWPLOWANALYTICS.SNOWPLOW/JSONSCHEMA/JSONSCHEMA/1-0-0", "COM_SNOWPLOWANALYTICS_SNOWPLOW_JSONSCHEMA_1_0_0"), 
@@ -20,6 +29,20 @@ def pop3(list, i):
     ])
 def test_url_to_column(test_input, expected):
     assert url_to_column(test_input) == expected
+
+@pytest.mark.parametrize("test_input_events,test_input_urls,test_input_versions, test_input_tables,expected", [
+    (['event1', 'event2', 'event3'], [None, None, None], [None, '5', '9'], [None, None, None], ['event1_1', 'event2_5', 'event3_9']),
+    (['event1', 'event2', 'event3'], ['iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', 'iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0', 'iglu:com.snowplowanalytics.snowplow/site_search/jsonschema/1-0-0'], ['5', '2', '9'], [None, None, None], ['event1_1', 'event2_1', 'event3_1']),
+    (['event1', 'event2', 'event3'], ['iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', None, 'iglu:com.snowplowanalytics.snowplow/site_search/jsonschema/1-0-0'], ['5', '2', '9'], ['name1', 'name2', 'name3'], ['name1_1', 'name2_2', 'name3_1'])
+    ])
+def test_url_to_column(test_input_events, test_input_urls, test_input_versions, test_input_tables, expected):
+    assert generate_names(test_input_events, test_input_urls, test_input_versions, test_input_tables) == expected
+
+
+def test_duplicates(capfd):
+    system(f'python {os.path.join("utils", "snowplow_normalize_model_gen.py")} {os.path.join("utils", "tests", "test_normalize_config_duplicate.json")}')
+    out, err = capfd.readouterr()
+    assert re.match(r"^KeyError: \"Configruation leads to duplicate event names, please remove the duplicates and try again\. Duplicates: \['event_name1_1'\]\"$", err.split('\n')[-2])
 
 class Test_types:
     def test_get_types(self):
@@ -535,3 +558,76 @@ class Test_cleanup_models:
         assert re.match(r'^Cleanup will remove models: {.*}\s*$', out.split('\n')[0])
         assert re.match(r'^Deleted 22 models, quitting...\s*$', out.split('\n')[1])
         assert set(files) == set(expected_files)
+
+class Test_model_output:
+    @pytest.fixture(scope='class') # Only run once per class
+    def setup_teardown(self):
+        model_folder = str(uuid.uuid4())
+
+        with open(os.path.join("utils", "tests", "test_split_event_config.json"), 'r') as file:
+            config_template = file.read()
+        config_template = config_template.replace('$1', model_folder)
+
+        with open(os.path.join("utils", "tests", "test_split_event_config_filled.json"), 'w') as file:
+            file.write(config_template)
+
+        system(f'python {os.path.join("utils", "snowplow_split_events_model_gen.py")} {os.path.join("utils", "tests", "test_split_event_config_filled.json")}')
+        yield model_folder
+
+        # teardown code
+        shutil.rmtree(os.path.join('models', model_folder))
+        os.remove(os.path.join("utils", "tests", "test_split_event_config_filled.json"))
+
+    def test_users(self, setup_teardown):
+        with open(os.path.join('models', setup_teardown, 'test_events_users.sql')) as file:
+            output = file.read()
+
+        with open(os.path.join('utils', 'tests', 'expected', 'test_events_users.sql')) as file:
+            expected = file.read()
+
+        assert compare(output, expected)
+    
+    def test_decomposed(self, setup_teardown):
+        with open(os.path.join('models', setup_teardown, 'test_split_events.sql')) as file:
+            output = file.read()
+
+        with open(os.path.join('utils', 'tests', 'expected', 'test_split_events.sql')) as file:
+            expected = file.read()
+
+        assert compare(output, expected)
+
+    def test_default_name(self, setup_teardown):
+        with open(os.path.join('models', setup_teardown, 'event_name1_1.sql')) as file:
+            output = file.read()
+
+        with open(os.path.join('utils', 'tests', 'expected', 'event_name1_1.sql')) as file:
+            expected = file.read()
+
+        assert compare(output, expected)
+
+    def test_no_alias(self, setup_teardown):
+        with open(os.path.join('models', setup_teardown, 'custom_table_name2_1.sql')) as file:
+            output = file.read()
+
+        with open(os.path.join('utils', 'tests', 'expected', 'custom_table_name2_1.sql')) as file:
+            expected = file.read()
+
+        assert compare(output, expected)
+
+    def test_no_sde(self, setup_teardown):
+        with open(os.path.join('models', setup_teardown, 'custom_table_name3_2.sql')) as file:
+            output = file.read()
+
+        with open(os.path.join('utils', 'tests', 'expected', 'custom_table_name3_2.sql')) as file:
+            expected = file.read()
+
+        assert compare(output, expected)
+
+    def test_full(self, setup_teardown):
+        with open(os.path.join('models', setup_teardown, 'custom_table_name4_1.sql')) as file:
+            output = file.read()
+
+        with open(os.path.join('utils', 'tests', 'expected', 'custom_table_name4_1.sql')) as file:
+            expected = file.read()
+
+        assert compare(output, expected)

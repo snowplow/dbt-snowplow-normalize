@@ -159,6 +159,26 @@ def validate_json(jsonData: dict, schema: dict = None, validate: bool = True, sc
     else:
         return True
 
+
+def generate_names(event_names: list, sde_urls: list, versions: list, table_names: list) -> list:
+    """Generate all event based model names from the values provided in the config file
+
+    Args:
+        event_names (list): List of event names from config file
+        sde_urls (list): List of SDE uls from the config file
+        versions (list): List of versions from the config file
+        table_names (list): List of explicit table names from the config file
+
+    Returns:
+        list: List of all model names that will be generated from events in the config file. Does not include the filtered table or users table.
+    """
+    verboseprint('Generating table names...')
+    sde_major_versions = [sde_url.split('-')[0][-1] if sde_url is not None else version if version is not None else '1' for sde_url, version in zip(sde_urls, versions)]
+    model_names = [event_name + '_' + sde_major_version if table_name is None else table_name + '_' + sde_major_version for event_name, sde_major_version, table_name in zip(event_names, sde_major_versions, table_names)]
+
+    return model_names
+
+
 def cleanup_models(event_names: list, sde_urls: list, versions: list, table_names: list, models_folder: str, user_table_name: str, filtered_events_table_name: str, dry_run: bool) -> None:
     """Clean up excess models not present in your config file and quit
 
@@ -173,8 +193,7 @@ def cleanup_models(event_names: list, sde_urls: list, versions: list, table_name
         dry_run (boolean): Do as a dry run or not
     """
     verboseprint('Starting cleanup...')
-    sde_major_versions = [sde_url.split('-')[0][-1] if sde_url is not None else version if version is not None else '1' for sde_url, version in zip(sde_urls, versions)]
-    model_names = [event_name + '_' + sde_major_version if table_name is None else table_name + '_' + sde_major_version for event_name, sde_major_version, table_name in zip(event_names, sde_major_versions, table_names)]
+    model_names = generate_names(event_names, sde_urls, versions, table_names)
     if filtered_events_table_name is not None:
         model_names.extend([user_table_name, filtered_events_table_name])
     else:

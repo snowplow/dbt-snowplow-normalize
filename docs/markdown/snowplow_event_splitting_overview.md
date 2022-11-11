@@ -42,10 +42,7 @@ limitations under the License.
 [license]: http://www.apache.org/licenses/LICENSE-2.0
 [dbt-package-docs]: https://docs.getdbt.com/docs/building-a-dbt-project/package-management
 [discourse]: http://discourse.snowplow.io/
-[iglu-resolver]: https://docs.snowplow.io/docs/pipeline-components-and-applications/iglu/iglu-resolver/
-[self-desc-events]: https://docs.snowplow.io/docs/understanding-tracking-design/out-of-the-box-vs-custom-events-and-entities/#self-describing-events
-[sp-contexts]: https://docs.snowplow.io/docs/understanding-tracking-design/predefined-vs-custom-entities/#custom-contexts
-[splitting-operation]: https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/dbt-event-splitting-model/#operation
+
 
 {% endraw %}
 {% enddocs %}
