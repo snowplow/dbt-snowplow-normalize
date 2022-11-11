@@ -1,5 +1,12 @@
 name: Release
 
+#####
+# Your changelog must be called CHANGELOG (no ext) and use the expected format (Package_Name tag_number (date) \n ------- \n changes...)
+# Any text between the previous and new version in the changelog will be used as the text for the release, so use markdown syntax as needed
+# The package_name variable must match what is in your CHANELOG and will be used as part of the release name
+# This workflow maybe supports pre-release versions (with rc in the version) - but no promises.
+#####
+
 on:
   push:
     branches:
@@ -20,7 +27,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
       with:
-          fetch-depth: 0
+          fetch-depth: 0 # needed to get tags
 
     - name: 'Get Previous tag'
       id: previoustag
@@ -30,18 +37,20 @@ jobs:
 
     - name: Get tag and package versions
       id: version
+      # Grab the version number of from the project.yml file as the pushed version of the package, set to variable dbt_package_version
       run: |
         echo "dbt_package_version=$(grep -oP "(?<=version: ')(.*)(?=')" dbt_project.yml)" >> $GITHUB_OUTPUT
         echo "Project YAML version: $(grep -oP "(?<=version: ')(.*)(?=')" dbt_project.yml)"
 
-    - name: Fail if version already match
+    - name: Echo if version already match
       if: ${{ steps.previoustag.outputs.tag == steps.version.outputs.dbt_package_version }}
       run: |
         echo "Tag version (${{ steps.previoustag.outputs.tag }}) is the same as the version in project (${{ steps.version.outputs.dbt_package_version }}), no need to release."
 
-    - name: Continue if version doesn't match
+    - name: Ensure future steps continue if version doesn't match
       id: new_version_flag
       if: ${{ steps.previoustag.outputs.tag != steps.version.outputs.dbt_package_version }}
+      # Set a flag to check if we need to run the future steps, if this is not set they won't run.
       run: |
         echo "Tag version (${{ steps.previoustag.outputs.tag }}) is different from the version in project (${{ steps.version.outputs.dbt_package_version }}), will release."
         echo "new_version=yes" >> $GITHUB_OUTPUT
@@ -66,6 +75,7 @@ jobs:
     - name: Generate Release Information
       id: tag_version
       uses: mathieudutour/github-tag-action@v6.1
+      # Use this to avoid overwriting existing tags
       with:
         dry_run: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -90,6 +100,8 @@ jobs:
 
     - name: Prep release body
       id: release_prep
+      # Grep the CHANGELOG to get the text between the new version line and the previous version line (tail to cut off the ----- line, can't have variable length lookbacks in regex)
+      # Due to multiline output, need to use this EOF approach https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-strings
       run: |
         echo 'release_body<<EOF' >> $GITHUB_OUTPUT
         echo "$(grep -Pzo "(?<=${{env.package_name}} ${{ needs.version_check.outputs.v_package }} \(\d{4}-\d{2}-\d{2}\)\n)-*\n(?s)(.*)(?=${{env.package_name}} ${{ needs.version_check.outputs.v_old }} \(\d{4}-\d{2}-\d{2}\))" CHANGELOG | tail -n +2)" >> $GITHUB_OUTPUT
