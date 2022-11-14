@@ -1,10 +1,10 @@
-{% docs __snowplow_event_splitting__ %}
+{% docs __snowplow_normalize__ %}
 
 {% raw %}
 
-# Snowplow Event Splitting Package
+# Snowplow Normalize Package
 
-Welcome to the model documentation site for the Snowplow Event Splitting dbt package. The package provides 2 macros and a python script that is used to generate your models; these models provide a table per event type that you specify, and can also produce a thin table of the split events and a user table, for use within downstream ETL tools. 
+Welcome to the model documentation site for the Snowplow Normalize dbt package. The package provides 2 macros and a python script that is used to generate normalized data warehouse models (i.e. 1 table per event type); these models provide a table per event type that you specify, and can also produce a thin table of the normalized events and a user table, for use within downstream ETL tools. 
 
 **For more information, including a detailed operation guide please visit the [Snowplow Docs](https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/).**
 
@@ -12,11 +12,11 @@ Welcome to the model documentation site for the Snowplow Event Splitting dbt pac
 
 ## Overview
 
-This package contains a python script that is designed to be used in conjunction with the macros provided to generate models that decompose the Snowplow `atomic.events` table into individual tables. For more information on usage and the design of the models produced, see the [Package Docs](https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/dbt-event-splitting-model).
+This package contains a python script that is designed to be used in conjunction with the macros provided to generate models that normalize the Snowplow `atomic.events` table into individual tables. For more information on usage and the design of the models produced, see the [Package Docs](https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/dbt-normalize-model).
 
 ## Installation
 
-Check [dbt Hub](https://hub.getdbt.com/snowplow/snowplow_event_splitting/latest/) for the latest installation instructions, or read the [dbt docs][dbt-package-docs] for more information on installing packages.
+Check [dbt Hub](https://hub.getdbt.com/snowplow/snowplow_normalize/latest/) for the latest installation instructions, or read the [dbt docs][dbt-package-docs] for more information on installing packages.
 
 # Join the Snowplow community
 
@@ -28,7 +28,7 @@ If you find a bug, please report an issue on GitHub.
 
 # Copyright and license
 
-The snowplow-web package is Copyright 2022 Snowplow Analytics Ltd.
+The snowplow-normalize package is Copyright 2022 Snowplow Analytics Ltd.
 
 Licensed under the [Apache License, Version 2.0][license] (the "License");
 you may not use this software except in compliance with the License.

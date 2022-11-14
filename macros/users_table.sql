@@ -1,5 +1,5 @@
 {% macro users_table(user_cols = [], user_keys = [], user_types = []) %}
-    {{ return(adapter.dispatch('users_table')(user_cols, user_keys, user_types)) }}
+    {{ return(adapter.dispatch('users_table', 'snowplow_normalize')(user_cols, user_keys, user_types)) }}
 {% endmacro %}
 
 {% macro snowflake__users_table(user_cols, user_keys, user_types) %}
@@ -9,6 +9,10 @@
 {%- for ind in range(user_cols|length) -%}
     {% do user_cols_clean.append('_'.join(user_cols[ind].split('_')[:-2])) -%}
 {%- endfor -%}
+{% set re = modules.re %}
+{% set camel_string1 = '([A-Z]+)([A-Z][a-z])'%} {# Capitals followed by a lowercase  #}
+{% set camel_string2 = '([a-z\d])([A-Z])'%} {# lowercase followed by a captial #}
+{% set replace_string = '\\1_\\2' %}
 
 select
     user_id
@@ -17,7 +21,7 @@ select
     {% if user_cols_clean|length > 0 %}
     {%- for col, col_ind in zip(user_cols_clean, range(user_cols_clean|length)) -%}
     {%- for key, type in zip(user_keys[col_ind], user_types[col_ind]) -%}
-    , {{ col }}[0]:{{ key }}::{{ type }} as {{ key }}
+    , {{ col }}[0]:{{ key }}::{{ type }} as {{ re.sub(camel_string2, replace_string, re.sub(camel_string1, replace_string, key)).replace('-', '_').lower() }}
     {% endfor -%}
     {%- endfor -%}
     {%- endif %}
@@ -34,12 +38,14 @@ qualify
 {% macro bigquery__users_table(user_cols, user_keys, user_types) %}
 {# Replace keys with snake_case where needed #}
 {% set re = modules.re %}
-{% set camel_string = '(?<!^)(?=[A-Z])'%}
+{% set camel_string1 = '([A-Z]+)([A-Z][a-z])'%} {# Capitals followed by a lowercase  #}
+{% set camel_string2 = '([a-z\d])([A-Z])'%} {# lowercase followed by a captial #}
+{% set replace_string = '\\1_\\2' %}
 {%- set user_keys_clean = [] -%}
 {%- for ind1 in range(user_keys|length) -%}
     {%- set user_key_clean = [] -%}
     {%- for ind2 in range(user_keys[ind1]|length) -%}
-        {% do user_key_clean.append(re.sub(camel_string, '_', user_keys[ind1][ind2]).lower()) -%}
+        {% do user_key_clean.append(re.sub(camel_string2, replace_string, re.sub(camel_string1, replace_string, user_keys[ind1][ind2])).replace('-', '_').lower()) -%}
     {%- endfor -%}
     {% do user_keys_clean.append(user_key_clean) -%}
 {%- endfor -%}
@@ -83,12 +89,14 @@ where
 
 {# Replace keys with snake_case where needed #}
 {% set re = modules.re %}
-{% set camel_string = '(?<!^)(?=[A-Z])'%}
+{% set camel_string1 = '([A-Z]+)([A-Z][a-z])'%} {# Capitals followed by a lowercase  #}
+{% set camel_string2 = '([a-z\d])([A-Z])'%} {# lowercase followed by a captial #}
+{% set replace_string = '\\1_\\2' %}
 {%- set user_keys_clean = [] -%}
 {%- for ind1 in range(user_keys|length) -%}
     {%- set user_key_clean = [] -%}
     {%- for ind2 in range(user_keys[ind1]|length) -%}
-        {% do user_key_clean.append(re.sub(camel_string, '_', user_keys[ind1][ind2]).lower()) -%}
+        {% do user_key_clean.append(re.sub(camel_string2, replace_string, re.sub(camel_string1, replace_string, user_keys[ind1][ind2])).replace('-', '_').lower()) -%}
     {%- endfor -%}
     {% do user_keys_clean.append(user_key_clean) -%}
 {%- endfor -%}

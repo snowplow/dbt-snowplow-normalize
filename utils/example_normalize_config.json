@@ -1,11 +1,11 @@
 {
     "config":{
         "resolver_file_path": "./resolver_config.json",
-        "filtered_events_table_name":"events_split",
+        "filtered_events_table_name":"events_normalized",
         "users_table_name":"events_users",
         "validate_schemas": true,
         "overwrite": true,
-        "models_folder": "snowplow_split_events"
+        "models_folder": "snowplow_normalized_events"
     },
     "events":[
         {

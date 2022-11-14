@@ -2,11 +2,11 @@
 
 ![snowplow-logo](https://raw.githubusercontent.com/snowplow/dbt-snowplow-utils/main/assets/snowplow_logo.png)
 
-# snowplow-event-splitter
+# snowplow-normalize
 
 This dbt package:
 
-- Provides macros to simplify the production of models that split Snowplow event data into a table per event type, plus a reduced events table and latest user context table, for easier integration with downstream tools.
+- Provides macros to simplify the production of models that normalize Snowplow event data into a table per event type, plus a reduced events table and latest user context table, for easier integration with downstream tools.
 - Includes a python script to generate the models using a simple configuration file that uses the schemas used within your pipelines to identify the columns, to greatly reduce the upfront effort in creating these models.
 
 Please refer to the [doc site](https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/) for a full breakdown of the package.
@@ -15,9 +15,9 @@ Please refer to the [doc site](https://docs.snowplow.io/docs/modeling-your-data/
 
 ### Adapter Support
 
-The snowplow-event-splitter v0.1.0 package currently supports BigQuery, Databricks & Snowflake.
+The snowplow-normalize v0.1.0 package currently supports BigQuery, Databricks & Snowflake.
 
-| Warehouse                        | dbt versions      | snowplow-event-split version |
+| Warehouse                        | dbt versions      | snowplow-normalize version |
 | :------------------------------: | :---------------: | :--------------------------: |
 | BigQuery, Databricks & Snowflake | >=1.0.0 to <2.0.0 | 0.1.0                        |
 
@@ -34,7 +34,7 @@ Check dbt Hub for the latest installation instructions, or read the [dbt docs][d
 
 ### Configuration & Operation
 
-Please refer to the [doc site][snowplow-event-splitter-docs] for details on how to configure and run the package.
+Please refer to the [doc site][snowplow-normalize-docs] for details on how to configure and run the package.
 
 ### Models
 
@@ -43,10 +43,10 @@ This package doesn't contain any models directly, however it is used to produce 
 | Model                     | Description                                                                                |
 | ------------------------- | ------------------------------------------------------------------------------------------ |
 | event_name                | A table for each of your specified event names, with flat columns from self-describing events and contexts. |
-| filtered_events           | A table that contains the `event_id`s, `collector_tstamp`, event name, and the name of the table that those events have been split into. Note it doesn't contain events not split out into individual tables. |
+| filtered_events           | A table that contains the `event_id`s, `collector_tstamp`, event name, and the name of the table that those events have been normalized into. Note it doesn't contain events not split out into individual tables. |
 | event_users               | A table with the latest user context columns for any user_ids in your events table.  |
 
-For more detailed information, see the [doc site][snowplow-event-splitter-docs].
+For more detailed information, see the [doc site][snowplow-normalize-docs].
 # Join the Snowplow community
 
 We welcome all ideas, questions and contributions!
@@ -57,7 +57,7 @@ If you find a bug, please report an issue on GitHub.
 
 # Copyright and license
 
-The snowplow-event-splitting package is Copyright 2022 Snowplow Analytics Ltd.
+The snowplow-normalize package is Copyright 2022 Snowplow Analytics Ltd.
 
 Licensed under the [Apache License, Version 2.0][license] (the "License");
 you may not use this software except in compliance with the License.
@@ -77,7 +77,7 @@ limitations under the License.
 [dbt-package-docs]: https://docs.getdbt.com/docs/building-a-dbt-project/package-management
 [discourse-image]: https://img.shields.io/discourse/posts?server=https%3A%2F%2Fdiscourse.snowplow.io%2F
 [discourse]: http://discourse.snowplow.io/
-[snowplow-web-splitter]: https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/
+[snowplow-normalize-docs]: https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/dbt-normalize-model
 
-[release-image]: https://img.shields.io/github/v/release/snowplow-incubator/dbt-snowplow-event-splitting?sort=semver
-[releases]: https://github.com/snowplow-incubator/dbt-snowplow-event-splitting/releases
+[release-image]: https://img.shields.io/github/v/release/snowplow-incubator/dbt-snowplow-normalize?sort=semver
+[releases]: https://github.com/snowplow-incubator/dbt-snowplow-normalize/releases

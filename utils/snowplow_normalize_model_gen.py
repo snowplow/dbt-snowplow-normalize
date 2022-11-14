@@ -61,7 +61,7 @@ for event in config.get('events'):
 validate_schemas = config.get('config').get('overwrite') or True
 overwrite = config.get('config').get('overwrite') or True
 resolver_file_path = config.get('config').get('resolver_file_path')
-models_folder = config.get('config').get('models_folder') or 'snowplow_split_events'
+models_folder = config.get('config').get('models_folder') or 'snowplow_normalized_events'
 user_table_name = config.get('config').get('users_table_name') or 'events_users'
 
 # Run Cleanup if required
@@ -209,7 +209,7 @@ for i in range(len(event_names)):
 {{%- set context_types = {context_types or []} -%}}
 {{%- set context_alias = {context_alias or []} -%}}
 
-{{{{ split_events(
+{{{{ snowplow_normalize.normalize_events(
     event_name,
     flat_cols,
     sde_col,
@@ -319,7 +319,7 @@ if user_urls is not None:
 {{%- set user_keys = {user_keys or []} -%}}
 {{%- set user_types = {user_types or []} -%}}
 
-{{{{ users_table(
+{{{{ snowplow_normalize.users_table(
     user_cols,
     user_keys,
     user_types
