@@ -30,7 +30,7 @@
                 "domain_userid",
                 "app_id"
             ],
-            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
+            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/site_search/jsonschema/1-0-0",
             "context_schemas":[
                 "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
                 "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0"
