@@ -74,5 +74,5 @@ limitations under the License.
 [discourse]: http://discourse.snowplow.io/
 [snowplow-normalize-docs]: https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/dbt-normalize-model
 
-[release-image]: https://img.shields.io/github/v/release/snowplow-incubator/dbt-snowplow-normalize?sort=semver
-[releases]: https://github.com/snowplow-incubator/dbt-snowplow-normalize/releases
+[release-image]: https://img.shields.io/github/v/release/snowplow/dbt-snowplow-normalize?sort=semver
+[releases]: https://github.com/snowplow/dbt-snowplow-normalize/releases

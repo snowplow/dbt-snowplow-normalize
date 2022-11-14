@@ -1,0 +1,33 @@
+Snowplow Normalize 0.1.0 (2022-12-05)
+---------------------------------------
+## Summary
+This is the first full release of the Snowplow Normalize package, it stabilizes features and file formats for future developments and delivers a working product for use within your analysis.
+
+## Features
+- Python script to generate models to normalize your custom events and entities
+- Support for Databricks, BigQuery, and Snowflake
+- Full test suite to avoid unexpected breaking changes in the future
+- Example config and resolver files to get started fast
+- Name of package agreed (Close #5)
+
+## Installation
+To install the package, add the following to the `packages.yml` in your project:
+
+### Github
+```yml
+packages:
+  - git: "https://github.com/snowplow/dbt-snowplow-normalize.git"
+    revision: 0.1.0
+```
+
+### dbt hub
+Please note that it may be a few days before the package is available on dbt hub after the initial release.
+```yml
+packages:
+  - package: snowplow/snowplow_normalize
+    version: [">=0.1.0", "<0.2.0"]
+```
+
+Snowplow Normalize 0.0.1 (2022-10-21)
+---------------------------------------
+Initial commit of package
