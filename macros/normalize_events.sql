@@ -1,14 +1,14 @@
-{% macro split_events(event_name, flat_cols = [], sde_col = '', sde_keys = [], sde_types = [], context_cols = [], context_keys = [], context_types = [], context_aliases = []) %}
-    {{ return(adapter.dispatch('split_events')(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases)) }}
+{% macro normalize_events(event_name, flat_cols = [], sde_col = '', sde_keys = [], sde_types = [], context_cols = [], context_keys = [], context_types = [], context_aliases = []) %}
+    {{ return(adapter.dispatch('normalize_events')(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases)) }}
 {% endmacro %}
 
-{% macro snowflake__split_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
+{% macro snowflake__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
 
 {# Remove down to major version for Snowflake columns, drop 2 last _X values #}
-{%- set sde_col = '_'.join(sde_col.split('_')[:-2]) -%} 
+{%- set sde_col = '_'.join(sde_col.split('_')[:-2]) -%}
 {%- set context_cols_clean = [] -%}
 {%- for ind in range(context_cols|length) -%}
-    {% do context_cols_clean.append('_'.join(context_cols[ind].split('_')[:-2])) -%} 
+    {% do context_cols_clean.append('_'.join(context_cols[ind].split('_')[:-2])) -%}
 {%- endfor -%}
 
 select
@@ -46,21 +46,21 @@ where
 {% endmacro %}
 
 
-{% macro bigquery__split_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
+{% macro bigquery__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
 {# Replace keys with snake_case where needed #}
 {% set re = modules.re %}
 {% set camel_string = '(?<!^)(?=[A-Z])'%}
-{%- set sde_keys_clean = [] -%} 
+{%- set sde_keys_clean = [] -%}
 {%- set context_keys_clean = [] -%}
 {%- for ind in range(sde_keys|length) -%}
-    {% do sde_keys_clean.append(re.sub(camel_string, '_', sde_keys[ind]).lower()) -%} 
+    {% do sde_keys_clean.append(re.sub(camel_string, '_', sde_keys[ind]).lower()) -%}
 {%- endfor -%}
 {%- for ind1 in range(context_keys|length) -%}
     {%- set context_key_clean = [] -%}
     {%- for ind2 in range(context_keys[ind1]|length) -%}
-        {% do context_key_clean.append(re.sub(camel_string, '_', context_keys[ind1][ind2]).lower()) -%} 
+        {% do context_key_clean.append(re.sub(camel_string, '_', context_keys[ind1][ind2]).lower()) -%}
     {%- endfor -%}
-    {% do context_keys_clean.append(context_key_clean) -%} 
+    {% do context_keys_clean.append(context_key_clean) -%}
 {%- endfor -%}
 
 
@@ -98,29 +98,29 @@ where
     and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
 {% endmacro %}
 
-{% macro databricks__split_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
+{% macro databricks__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
 
 {# Remove down to major version for Databricks columns, drop 2 last _X values #}
-{%- set sde_col = '_'.join(sde_col.split('_')[:-2]) -%} 
+{%- set sde_col = '_'.join(sde_col.split('_')[:-2]) -%}
 {%- set context_cols_clean = [] -%}
 {%- for ind in range(context_cols|length) -%}
-    {% do context_cols_clean.append('_'.join(context_cols[ind].split('_')[:-2])) -%} 
+    {% do context_cols_clean.append('_'.join(context_cols[ind].split('_')[:-2])) -%}
 {%- endfor -%}
 
 {# Replace keys with snake_case where needed #}
 {% set re = modules.re %}
 {% set camel_string = '(?<!^)(?=[A-Z])'%}
-{%- set sde_keys_clean = [] -%} 
+{%- set sde_keys_clean = [] -%}
 {%- set context_keys_clean = [] -%}
 {%- for ind in range(sde_keys|length) -%}
-    {% do sde_keys_clean.append(re.sub(camel_string, '_', sde_keys[ind]).lower()) -%} 
+    {% do sde_keys_clean.append(re.sub(camel_string, '_', sde_keys[ind]).lower()) -%}
 {%- endfor -%}
 {%- for ind1 in range(context_keys|length) -%}
     {%- set context_key_clean = [] -%}
     {%- for ind2 in range(context_keys[ind1]|length) -%}
-        {% do context_key_clean.append(re.sub(camel_string, '_', context_keys[ind1][ind2]).lower()) -%} 
+        {% do context_key_clean.append(re.sub(camel_string, '_', context_keys[ind1][ind2]).lower()) -%}
     {%- endfor -%}
-    {% do context_keys_clean.append(context_key_clean) -%} 
+    {% do context_keys_clean.append(context_key_clean) -%}
 {%- endfor -%}
 
 

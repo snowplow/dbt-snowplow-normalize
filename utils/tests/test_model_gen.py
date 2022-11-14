@@ -24,7 +24,7 @@ def compare(s1, s2):
 
 @pytest.mark.parametrize("test_input,expected", [
     ("com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1", "COM_SNOWPLOWANALYTICS_SNOWPLOW_LINK_CLICK_1_0_1"),
-    ("COM.SNOWPLOWANALYTICS.SNOWPLOW/JSONSCHEMA/JSONSCHEMA/1-0-0", "COM_SNOWPLOWANALYTICS_SNOWPLOW_JSONSCHEMA_1_0_0"), 
+    ("COM.SNOWPLOWANALYTICS.SNOWPLOW/JSONSCHEMA/JSONSCHEMA/1-0-0", "COM_SNOWPLOWANALYTICS_SNOWPLOW_JSONSCHEMA_1_0_0"),
     ("com.google.tag-manager.server-side/exception/jsonschema/2-8-1", "COM_GOOGLE_TAG_MANAGER_SERVER_SIDE_EXCEPTION_2_8_1")
     ])
 def test_url_to_column(test_input, expected):
@@ -51,7 +51,7 @@ class Test_types:
     def test_get_types_raises(self):
         with pytest.raises(ValueError):
             get_types({'properties': {'col': {'typo': ['null', 'Number']}}})
-    
+
     def test_type_hierarchy(self):
         assert sorted(type_hierarchy.keys(), key = lambda x: type_hierarchy[x]) == ['null', 'boolean', 'integer', 'number', 'array', 'object', 'string']
 
@@ -69,7 +69,7 @@ class Test_parse_args:
     def test_version(self):
         with pytest.raises(SystemExit):
             parse_args(['-version'])
-    
+
     def test_dryRun(self):
         args = parse_args(['--dryRun', 'config_path'])
         args2 = parse_args(['config_path'])
@@ -93,13 +93,13 @@ class Test_write_model_file:
         file = tmpdir.join('output.txt')
         write_model_file(file.strpath, 'Hello\n World!')
         assert file.read() == 'Hello\n World!'
-    
+
     def test_no_overwrite(self, tmpdir):
         file = tmpdir.join('dont_overwrite.txt')
         file.write("Please don't overwrite me.")
         write_model_file(file.strpath, 'Hello\n World!', False)
         assert file.read() == "Please don't overwrite me."
-    
+
     def test_overwrite(self, tmpdir):
         file = tmpdir.join('overwrite.txt')
         file.write("Please do overwrite me.")
@@ -108,33 +108,33 @@ class Test_write_model_file:
 
 class Test_parse_schema_url:
     def test_public_url(self):
-        parsed_url = parse_schema_url('iglu:com.demo/example_event_pub/jsonschema/1-0-0', 
-        {'https://com-demo-private.net': ['iglu:com.demo/example_event_priv/jsonschema/1-0-0', 'iglu:com.demo2/test_event_priv/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event_pub/jsonschema/1-0-0', 'iglu:com.demo2/test_event_pub/jsonschema/1-0-0']}, 
+        parsed_url = parse_schema_url('iglu:com.demo/example_event_pub/jsonschema/1-0-0',
+        {'https://com-demo-private.net': ['iglu:com.demo/example_event_priv/jsonschema/1-0-0', 'iglu:com.demo2/test_event_priv/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event_pub/jsonschema/1-0-0', 'iglu:com.demo2/test_event_pub/jsonschema/1-0-0']},
         {'iglucentral.com': None, 'com-demo-private.net': 'demo-key'}
         )
         assert parsed_url == 'http://iglucentral.com/schemas/com.demo/example_event_pub/jsonschema/1-0-0'
 
     def test_private_url(self):
-        parsed_url = parse_schema_url('iglu:com.demo2/test_event_priv/jsonschema/1-0-0', 
-        {'https://com-demo-private.net': ['iglu:com.demo/example_event_priv/jsonschema/1-0-0', 'iglu:com.demo2/test_event_priv/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event_pub/jsonschema/1-0-0', 'iglu:com.demo2/test_event_pub/jsonschema/1-0-0']}, 
+        parsed_url = parse_schema_url('iglu:com.demo2/test_event_priv/jsonschema/1-0-0',
+        {'https://com-demo-private.net': ['iglu:com.demo/example_event_priv/jsonschema/1-0-0', 'iglu:com.demo2/test_event_priv/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event_pub/jsonschema/1-0-0', 'iglu:com.demo2/test_event_pub/jsonschema/1-0-0']},
         {'iglucentral.com': None, 'com-demo-private.net': 'demo-key'})
         assert parsed_url == 'https://com-demo-private.net/api/schemas/com.demo2/test_event_priv/jsonschema/1-0-0'
 
     def test_http_url(self):
-        parsed_url = parse_schema_url('http://does-not-matter.com/what/the/url/is', 
-        {'https://com-demo-private.net': ['iglu:com.demo/example_event_priv/jsonschema/1-0-0', 'iglu:com.demo2/test_event_priv/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event_pub/jsonschema/1-0-0', 'iglu:com.demo2/test_event_pub/jsonschema/1-0-0']}, 
+        parsed_url = parse_schema_url('http://does-not-matter.com/what/the/url/is',
+        {'https://com-demo-private.net': ['iglu:com.demo/example_event_priv/jsonschema/1-0-0', 'iglu:com.demo2/test_event_priv/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event_pub/jsonschema/1-0-0', 'iglu:com.demo2/test_event_pub/jsonschema/1-0-0']},
         {'iglucentral.com': None, 'com-demo-private.net': 'demo-key'})
         assert parsed_url == 'http://does-not-matter.com/what/the/url/is'
 
     def test_not_found(self):
         with pytest.raises(ValueError):
-            parsed_url = parse_schema_url('iglu:com.demo2/extra_event/jsonschema/1-0-0', 
-            {'https://com-demo-private.net': ['iglu:com.demo/example_event_priv/jsonschema/1-0-0', 'iglu:com.demo2/test_event_priv/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event_pub/jsonschema/1-0-0', 'iglu:com.demo2/test_event_pub/jsonschema/1-0-0']}, 
+            parsed_url = parse_schema_url('iglu:com.demo2/extra_event/jsonschema/1-0-0',
+            {'https://com-demo-private.net': ['iglu:com.demo/example_event_priv/jsonschema/1-0-0', 'iglu:com.demo2/test_event_priv/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event_pub/jsonschema/1-0-0', 'iglu:com.demo2/test_event_pub/jsonschema/1-0-0']},
             {'iglucentral.com': None, 'com-demo-private.net': 'demo-key'})
 
     def test_priority(self):
-        parsed_url = parse_schema_url('iglu:com.demo/test_event/jsonschema/1-0-0', 
-        {'https://com-demo-private.net': ['iglu:com.demo/example_event/jsonschema/1-0-0', 'iglu:com.demo/test_event/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event/jsonschema/1-0-0', 'iglu:com.demo/test_event/jsonschema/1-0-0']}, 
+        parsed_url = parse_schema_url('iglu:com.demo/test_event/jsonschema/1-0-0',
+        {'https://com-demo-private.net': ['iglu:com.demo/example_event/jsonschema/1-0-0', 'iglu:com.demo/test_event/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event/jsonschema/1-0-0', 'iglu:com.demo/test_event/jsonschema/1-0-0']},
         {'iglucentral.com': None, 'com-demo-private.net': 'demo-key'})
         assert parsed_url == 'https://com-demo-private.net/api/schemas/com.demo/test_event/jsonschema/1-0-0'
 
@@ -156,7 +156,7 @@ class Test_validate_json:
         jsonData = {"schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1", "data": {"repositories": [{"name": "Iglu Central", "priority": 0, "vendorPrefixes": [ "com.snowplowanalytics" ], "connection": {"http": {"uri": "http://iglucentral.com"}}}]}}
         schema = {"description":"Schema for an Iglu resolver\'s configuration","properties":{"cacheSize":{"type":"number"},"cacheTtl":{"type":["integer","null"],"minimum":0},"repositories":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"priority":{"type":"number"},"vendorPrefixes":{"type":"array","items":{"type":"string"}},"connection":{"type":"object","oneOf":[{"properties":{"embedded":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"],"additionalProperties":False}},"required":["embedded"],"additionalProperties":False},{"properties":{"http":{"type":"object","properties":{"uri":{"type":"string","format":"uri"},"apikey":{"type":["string","null"]}},"required":["uri"],"additionalProperties":False}},"required":["http"],"additionalProperties":False}]}},"required":["name","priority","vendorPrefixes","connection"],"additionalProperties":False}}},"additionalProperties":False,"type":"object","required":["cacheSize","repositories"],"self":{"vendor":"com.snowplowanalytics.iglu","name":"resolver-config","format":"jsonschema","version":"1-0-3"}}
         assert not validate_json(jsonData.get('data'), schema)
-    
+
     def test_warning(self):
         with pytest.warns(UserWarning):
             jsonData = {"schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1", "data": {"repositories": [{"name": "Iglu Central", "priority": 0, "vendorPrefixes": [ "com.snowplowanalytics" ], "connection": {"http": {"uri": "http://iglucentral.com"}}}]}}
@@ -165,20 +165,20 @@ class Test_validate_json:
 
     def test_get_schema(self):
         jsonData = {"schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1", "data": {"cacheSize": 500, "repositories": [{"name": "Iglu Central", "priority": 0, "vendorPrefixes": [ "com.snowplowanalytics" ], "connection": {"http": {"uri": "http://iglucentral.com"}}}]}}
-        assert validate_json(jsonData, 
-                            schemas_list = { 'http://iglucentral.com': ['iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1']}, 
+        assert validate_json(jsonData,
+                            schemas_list = { 'http://iglucentral.com': ['iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1']},
                             repo_keys = {'iglucentral.com': None})
 
     def test_no_input_error(self):
         with pytest.raises(ValueError):
             jsonData = {"schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1", "data": {"cacheSize": 500, "repositories": [{"name": "Iglu Central", "priority": 0, "vendorPrefixes": [ "com.snowplowanalytics" ], "connection": {"http": {"uri": "http://iglucentral.com"}}}]}}
             validate_json(jsonData)
-    
+
     def test_no_schema_error(self):
         with pytest.raises(ValueError):
             jsonData = {"schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1", "data": {"cacheSize": 500, "repositories": [{"name": "Iglu Central", "priority": 0, "vendorPrefixes": [ "com.snowplowanalytics" ], "connection": {"http": {"uri": "http://iglucentral.com"}}}]}}
-            validate_json(jsonData.get('data'), 
-                            schemas_list = { 'http://iglucentral.com': ['iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1']}, 
+            validate_json(jsonData.get('data'),
+                            schemas_list = { 'http://iglucentral.com': ['iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1']},
                             repo_keys = {'iglucentral.com': None})
 
 class Test_get_schema:
@@ -186,7 +186,7 @@ class Test_get_schema:
         got_schema = get_schema('http://iglucentral.com/schemas/com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', {})
         expected = {"description":"Schema for a link click event","properties":{"elementId":{"type":"string"},"elementClasses":{"type":"array","items":{"type":"string"}},"elementTarget":{"type":"string"},"targetUrl":{"type":"string","minLength":1},"elementContent":{"type":"string"}},"additionalProperties":False,"type":"object","required":["targetUrl"],"self":{"vendor":"com.snowplowanalytics.snowplow","name":"link_click","format":"jsonschema","version":"1-0-1"},"$schema":"http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#"}
         assert got_schema == expected
-    
+
     def test_use_cache(self):
         got_schema = get_schema('http://iglucentral.com/schemas/com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', {})
         got_schema2 = get_schema('http://iglucentral.com/schemas/com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', {})
@@ -198,7 +198,7 @@ class Test_cleanup_models:
         # Due to the cleanup function accessing the models folder we need
         # to actually test this on files in that folder so can't use a temp
         # directory to do the testing
-        
+
         # Generate folder and file names - use uuids so it's obvious to
         # delete them if anything goes wrong and they are left over
         keep_folder = str(uuid.uuid4())
@@ -234,14 +234,14 @@ class Test_cleanup_models:
         file_names = []
         for i, name in enumerate(generated_names):
             # user models in different folder, don't delete
-            if i >= 0 and i < 5: 
+            if i >= 0 and i < 5:
                 filename = os.path.join('models', keep_folder, name + '.sql')
                 file_names.append(filename)
                 with open(filename, 'w'):
                     pass
-            
+
             # table_name provided models
-            elif i >= 5 and i < 10: 
+            elif i >= 5 and i < 10:
                 event_names.append('Does not matter ' + str(i))
                 sde_urls.append(None)
                 versions.append(None)
@@ -252,7 +252,7 @@ class Test_cleanup_models:
                     pass
 
             # event_name models, with sdes
-            elif i >= 10 and i < 15: 
+            elif i >= 10 and i < 15:
                 event_names.append(name)
                 sde_urls.append(sde_urls_fixed[i - 10])
                 versions.append(sde_url_versions[i - 10])
@@ -261,9 +261,9 @@ class Test_cleanup_models:
                 file_names.append(filename)
                 with open(filename, 'w'):
                     pass
-            
+
             # event_name models, no sde, version provided
-            elif i >= 15 and i < 20: 
+            elif i >= 15 and i < 20:
                 event_names.append(name)
                 sde_urls.append(None)
                 versions.append(versions_fixed[i - 15])
@@ -272,9 +272,9 @@ class Test_cleanup_models:
                 file_names.append(filename)
                 with open(filename, 'w'):
                     pass
-            
+
             # event name models, no sde, no version provided
-            elif i >= 20 and i < 25: 
+            elif i >= 20 and i < 25:
                 event_names.append(name)
                 sde_urls.append(None)
                 versions.append(None)
@@ -283,14 +283,14 @@ class Test_cleanup_models:
                 file_names.append(filename)
                 with open(filename, 'w'):
                     pass
-            
+
             # extra models in config that don't exist on sysmte
-            elif i >= 25 and i < 40: 
+            elif i >= 25 and i < 40:
                 event_names.append('Does not matter' + str(i))
                 sde_urls.append(None)
                 versions.append(None)
                 table_names.append(name)
-        
+
         # write the user and filtered table files
         filename = os.path.join('models', model_folder, users_table + '.sql')
         file_names.append(filename)
@@ -316,7 +316,7 @@ class Test_cleanup_models:
         # teardown code
         shutil.rmtree(os.path.join('models', keep_folder))
         shutil.rmtree(os.path.join('models', model_folder))
-    
+
     # Keep all files in faked config input, expect none to delete
     def test_none_to_del(self, setup_teardown, capfd):
         with pytest.raises(SystemExit) as pytest_wrapped_e:
@@ -477,7 +477,7 @@ class Test_cleanup_models:
             cleanup_models(
                 event_names = setup_teardown.get('event_names'),
                 sde_urls = setup_teardown.get('sde_urls'),
-                versions = setup_teardown.get('versions'), 
+                versions = setup_teardown.get('versions'),
                 table_names= setup_teardown.get('table_names'),
                 models_folder= setup_teardown.get('model_folder'),
                 user_table_name= setup_teardown.get('users_table'),
@@ -490,7 +490,7 @@ class Test_cleanup_models:
         m_files = os.listdir(os.path.join('models', setup_teardown.get('model_folder')))
         m_files = [os.path.join('models', setup_teardown.get('model_folder'), file) for file in m_files]
         files = k_files + m_files
-        expected_files = pop2(setup_teardown.get('file_names'), -1) 
+        expected_files = pop2(setup_teardown.get('file_names'), -1)
         assert re.match(r'^Cleanup will remove models: {.*}\s*$', out.split('\n')[0])
         assert re.match(r'^Deleted 1 models, quitting...\s*$', out.split('\n')[1])
         assert set(files) == set(expected_files)
@@ -502,7 +502,7 @@ class Test_cleanup_models:
             cleanup_models(
                 event_names = setup_teardown.get('event_names'),
                 sde_urls = setup_teardown.get('sde_urls'),
-                versions = setup_teardown.get('versions'), 
+                versions = setup_teardown.get('versions'),
                 table_names= setup_teardown.get('table_names'),
                 models_folder= setup_teardown.get('model_folder'),
                 user_table_name= 'dummy_users',
@@ -515,7 +515,7 @@ class Test_cleanup_models:
         m_files = os.listdir(os.path.join('models', setup_teardown.get('model_folder')))
         m_files = [os.path.join('models', setup_teardown.get('model_folder'), file) for file in m_files]
         files = k_files + m_files
-        expected_files = pop2(setup_teardown.get('file_names'), -2) 
+        expected_files = pop2(setup_teardown.get('file_names'), -2)
         assert re.match(r'^Cleanup will remove models: {.*}\s*$', out.split('\n')[0])
         assert re.match(r'^Deleted 1 models, quitting...\s*$', out.split('\n')[1])
         assert set(files) == set(expected_files)
@@ -550,19 +550,19 @@ class Test_model_output:
     def setup_teardown(self):
         model_folder = str(uuid.uuid4())
 
-        with open(os.path.join("utils", "tests", "test_split_event_config.json"), 'r') as file:
+        with open(os.path.join("utils", "tests", "test_normalize_config.json"), 'r') as file:
             config_template = file.read()
         config_template = config_template.replace('$1', model_folder)
 
-        with open(os.path.join("utils", "tests", "test_split_event_config_filled.json"), 'w') as file:
+        with open(os.path.join("utils", "tests", "test_normalize_config_filled.json"), 'w') as file:
             file.write(config_template)
 
-        system(f'python {os.path.join("utils", "snowplow_split_events_model_gen.py")} {os.path.join("utils", "tests", "test_split_event_config_filled.json")}')
+        system(f'python {os.path.join("utils", "snowplow_normalize_model_gen.py")} {os.path.join("utils", "tests", "test_normalize_config_filled.json")}')
         yield model_folder
 
         # teardown code
         shutil.rmtree(os.path.join('models', model_folder))
-        os.remove(os.path.join("utils", "tests", "test_split_event_config_filled.json"))
+        os.remove(os.path.join("utils", "tests", "test_normalize_config_filled.json"))
 
     def test_users(self, setup_teardown):
         with open(os.path.join('models', setup_teardown, 'test_events_users.sql')) as file:
@@ -572,12 +572,12 @@ class Test_model_output:
             expected = file.read()
 
         assert compare(output, expected)
-    
+
     def test_decomposed(self, setup_teardown):
-        with open(os.path.join('models', setup_teardown, 'test_split_events.sql')) as file:
+        with open(os.path.join('models', setup_teardown, 'test_normalized_events.sql')) as file:
             output = file.read()
 
-        with open(os.path.join('utils', 'tests', 'expected', 'test_split_events.sql')) as file:
+        with open(os.path.join('utils', 'tests', 'expected', 'test_normalized_events.sql')) as file:
             expected = file.read()
 
         assert compare(output, expected)

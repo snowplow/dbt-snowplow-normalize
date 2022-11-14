@@ -24,7 +24,7 @@
 {%- set context_types = [] -%}
 {%- set context_alias = [] -%}
 
-{{ split_events(
+{{ normalize_events(
     event_name,
     flat_cols,
     sde_col,

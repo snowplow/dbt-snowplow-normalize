@@ -13,7 +13,7 @@ on:
       - main
 
 env:
-  package_name: <YOUR PACKAGE NAME HERE>
+  package_name: Snowplow Normalize
 
 jobs:
   version_check:

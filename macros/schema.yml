@@ -1,8 +1,8 @@
 version: 2
 
 macros:
-  - name: split_events
-    description: A macro to produce a table from `base_events_this_run` with the input columns, for a single event type 
+  - name: normalize_events
+    description: A macro to produce a table from `base_events_this_run` with the input columns, for a single event type
     arguments:
       - name: event_name
         type: string
