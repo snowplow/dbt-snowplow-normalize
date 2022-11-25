@@ -3,18 +3,12 @@
 {% endmacro %}
 
 {% macro snowflake__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
-
 {# Remove down to major version for Snowflake columns, drop 2 last _X values #}
 {%- set sde_col = '_'.join(sde_col.split('_')[:-2]) -%}
 {%- set context_cols_clean = [] -%}
 {%- for ind in range(context_cols|length) -%}
     {% do context_cols_clean.append('_'.join(context_cols[ind].split('_')[:-2])) -%}
 {%- endfor -%}
-
-{% set re = modules.re %}
-{% set camel_string1 = '([A-Z]+)([A-Z][a-z])'%} {# Capitals followed by a lowercase  #}
-{% set camel_string2 = '([a-z\d])([A-Z])'%} {# lowercase followed by a captial #}
-{% set replace_string = '\\1_\\2' %}
 
 select
     event_id
@@ -28,7 +22,7 @@ select
     -- self describing events column from event table
     {% if sde_col != '' %}
     {%- for key, type in zip(sde_keys, sde_types) -%}
-    , {{ sde_col }}:{{ key }}::{{ type }} as {{ re.sub(camel_string2, replace_string, re.sub(camel_string1, replace_string, key)).replace('-', '_').lower() }}
+    , {{ sde_col }}:{{ key }}::{{ type }} as {{ snowplow_normalize.snakeify_case(key) }}
     {% endfor -%}
     {%- endif -%}
     -- context column(s) from the event table
@@ -36,9 +30,9 @@ select
     {%- for col, col_ind in zip(context_cols_clean, range(context_cols_clean|length)) -%}
     {%- for key, type in zip(context_keys[col_ind], context_types[col_ind]) -%}
     {% if context_aliases|length > 0 -%}
-    , {{ col }}[0]:{{ key }}::{{ type }} as {{ context_aliases[col_ind] }}_{{ re.sub(camel_string2, replace_string, re.sub(camel_string1, replace_string, key)).replace('-', '_').lower() }}
+    , {{ col }}[0]:{{ key }}::{{ type }} as {{ context_aliases[col_ind] }}_{{ snowplow_normalize.snakeify_case(key) }}
     {% else -%}
-    , {{ col }}[0]:{{ key }}::{{ type }} as {{ re.sub(camel_string2, replace_string, re.sub(camel_string1, replace_string, key)).replace('-', '_').lower() }}
+    , {{ col }}[0]:{{ key }}::{{ type }} as {{ snowplow_normalize.snakeify_case(key) }}
     {%- endif -%}
     {%- endfor -%}
     {%- endfor -%}
@@ -53,23 +47,18 @@ where
 
 {% macro bigquery__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
 {# Replace keys with snake_case where needed #}
-{% set re = modules.re %}
-{% set camel_string1 = '([A-Z]+)([A-Z][a-z])'%} {# Capitals followed by a lowercase  #}
-{% set camel_string2 = '([a-z\d])([A-Z])'%} {# lowercase followed by a captial #}
-{% set replace_string = '\\1_\\2' %}
 {%- set sde_keys_clean = [] -%}
 {%- set context_keys_clean = [] -%}
 {%- for ind in range(sde_keys|length) -%}
-    {% do sde_keys_clean.append(re.sub(camel_string2, replace_string, re.sub(camel_string1, replace_string, sde_keys[ind])).replace('-', '_').lower()) -%}
+    {% do sde_keys_clean.append(snowplow_normalize.snakeify_case(sde_keys[ind])) -%}
 {%- endfor -%}
 {%- for ind1 in range(context_keys|length) -%}
     {%- set context_key_clean = [] -%}
     {%- for ind2 in range(context_keys[ind1]|length) -%}
-        {% do context_key_clean.append(re.sub(camel_string2, replace_string, re.sub(camel_string1, replace_string, context_keys[ind1][ind2])).replace('-', '_').lower()) -%}
+        {% do context_key_clean.append(snowplow_normalize.snakeify_case(context_keys[ind1][ind2])) -%}
     {%- endfor -%}
     {% do context_keys_clean.append(context_key_clean) -%}
 {%- endfor -%}
-
 
 select
     event_id
@@ -106,7 +95,6 @@ where
 {% endmacro %}
 
 {% macro databricks__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
-
 {# Remove down to major version for Databricks columns, drop 2 last _X values #}
 {%- set sde_col = '_'.join(sde_col.split('_')[:-2]) -%}
 {%- set context_cols_clean = [] -%}
@@ -115,23 +103,18 @@ where
 {%- endfor -%}
 
 {# Replace keys with snake_case where needed #}
-{% set re = modules.re %}
-{% set camel_string1 = '([A-Z]+)([A-Z][a-z])'%} {# Capitals followed by a lowercase  #}
-{% set camel_string2 = '([a-z\d])([A-Z])'%} {# lowercase followed by a captial #}
-{% set replace_string = '\\1_\\2' %}
 {%- set sde_keys_clean = [] -%}
 {%- set context_keys_clean = [] -%}
 {%- for ind in range(sde_keys|length) -%}
-    {% do sde_keys_clean.append(re.sub(camel_string2, replace_string, re.sub(camel_string1, replace_string, sde_keys[ind])).replace('-', '_').lower()) -%}
+    {% do sde_keys_clean.append(snowplow_normalize.snakeify_case(sde_keys[ind])) -%}
 {%- endfor -%}
 {%- for ind1 in range(context_keys|length) -%}
     {%- set context_key_clean = [] -%}
     {%- for ind2 in range(context_keys[ind1]|length) -%}
-        {% do context_key_clean.append(re.sub(camel_string2, replace_string, re.sub(camel_string1, replace_string, context_keys[ind1][ind2])).replace('-', '_').lower()) -%}
+        {% do context_key_clean.append(snowplow_normalize.snakeify_case(context_keys[ind1][ind2])) -%}
     {%- endfor -%}
     {% do context_keys_clean.append(context_key_clean) -%}
 {%- endfor -%}
-
 
 select
     event_id
