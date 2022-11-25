@@ -1,11 +1,12 @@
 {
     "config":{
         "resolver_file_path": "./resolver_config.json",
-        "filtered_events_table_name":"events_normalized",
-        "users_table_name":"events_users",
+        "filtered_events_table_name":"snowplow_events_normalized",
+        "users_table_name":"snowplow_context_users",
         "validate_schemas": true,
         "overwrite": true,
-        "models_folder": "snowplow_normalized_events"
+        "models_folder": "snowplow_normalized_events",
+        "models_prefix": "snowplow"
     },
     "events":[
         {

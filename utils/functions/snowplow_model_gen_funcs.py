@@ -160,7 +160,7 @@ def validate_json(jsonData: dict, schema: dict = None, validate: bool = True, sc
         return True
 
 
-def generate_names(event_names: list, sde_urls: list, versions: list, table_names: list) -> list:
+def generate_names(event_names: list, sde_urls: list, versions: list, table_names: list, prefix: str) -> list:
     """Generate all event based model names from the values provided in the config file
 
     Args:
@@ -168,18 +168,22 @@ def generate_names(event_names: list, sde_urls: list, versions: list, table_name
         sde_urls (list): List of SDE uls from the config file
         versions (list): List of versions from the config file
         table_names (list): List of explicit table names from the config file
+        prefix (string): String to prefix table names with from the config file
 
     Returns:
         list: List of all model names that will be generated from events in the config file. Does not include the filtered table or users table.
     """
     verboseprint('Generating table names...')
     sde_major_versions = [sde_url.split('-')[0][-1] if sde_url is not None else version if version is not None else '1' for sde_url, version in zip(sde_urls, versions)]
-    model_names = [event_name + '_' + sde_major_version if table_name is None else table_name + '_' + sde_major_version for event_name, sde_major_version, table_name in zip(event_names, sde_major_versions, table_names)]
+    model_names = [event_name + '_' + sde_major_version if table_name is None else table_name + '_' + sde_major_version
+                            for event_name, sde_major_version, table_name in zip(event_names, sde_major_versions, table_names)]
+    if prefix != '':
+        model_names = [prefix + '_' + name if custom_name is None else name for name, custom_name in zip(model_names, table_names)]
 
     return model_names
 
 
-def cleanup_models(event_names: list, sde_urls: list, versions: list, table_names: list, models_folder: str, user_table_name: str, filtered_events_table_name: str, dry_run: bool) -> None:
+def cleanup_models(event_names: list, sde_urls: list, versions: list, table_names: list, models_prefix: str, models_folder: str, user_table_name: str, filtered_events_table_name: str, dry_run: bool) -> None:
     """Clean up excess models not present in your config file and quit
 
     Args:
@@ -187,13 +191,14 @@ def cleanup_models(event_names: list, sde_urls: list, versions: list, table_name
         sde_urls (list): List of self describing event urls from your config
         versions (list): List of versions from your config
         table_names (list): List of tables names from your config
+        models_prefix (string): String for the prefix to non custom-named tables, from your config
         models_folder (string): The folder in models the script writes to from your config
         user_table_name (string): Name of your users table from your config
         filtered_events_table_name (string): Name of your filtered events table from your config
         dry_run (boolean): Do as a dry run or not
     """
     verboseprint('Starting cleanup...')
-    model_names = generate_names(event_names, sde_urls, versions, table_names)
+    model_names = generate_names(event_names, sde_urls, versions, table_names, models_prefix)
     if filtered_events_table_name is not None:
         model_names.extend([user_table_name, filtered_events_table_name])
     else:
@@ -246,7 +251,7 @@ type_hierarchy = {
 # Hard coded default resolver and schemas to use before we have checked the resolver is valid
 default_resolver = {"schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1", "data": {"cacheSize": 500, "repositories": [{"name": "Iglu Central", "priority": 0, "vendorPrefixes": [ "com.snowplowanalytics" ], "connection": {"http": {"uri": "http://iglucentral.com"}}}]}}
 resolver_schema = {"description":"Schema for an Iglu resolver\'s configuration","properties":{"cacheSize":{"type":"number"},"cacheTtl":{"type":["integer","null"],"minimum":0},"repositories":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"priority":{"type":"number"},"vendorPrefixes":{"type":"array","items":{"type":"string"}},"connection":{"type":"object","oneOf":[{"properties":{"embedded":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"],"additionalProperties":False}},"required":["embedded"],"additionalProperties":False},{"properties":{"http":{"type":"object","properties":{"uri":{"type":"string","format":"uri"},"apikey":{"type":["string","null"]}},"required":["uri"],"additionalProperties":False}},"required":["http"],"additionalProperties":False}]}},"required":["name","priority","vendorPrefixes","connection"],"additionalProperties":False}}},"additionalProperties":False,"type":"object","required":["cacheSize","repositories"],"self":{"vendor":"com.snowplowanalytics.iglu","name":"resolver-config","format":"jsonschema","version":"1-0-3"}}
-config_schema = { "description": "Schema for the Snowplow dbt normalize python script configuration", "properties": { "config": { "type": "object", "properties": { "resolver_file_path": { "type": "string" }, "filtered_events_table_name": { "type": "string" }, "users_table_name": { "type": "string" }, "validate_schemas": { "type": "boolean" }, "overwrite": { "type": "boolean" }, "models_folder": { "type": "string" } }, "required": [ "resolver_file_path" ], "additionalProperties": False }, "events": { "type": "array", "items": { "type": "object", "properties": { "event_name": { "type": "string" }, "event_columns": { "type": "array", "items": { "type": "string" } }, "self_describing_event_schema": { "type": "string" }, "context_schemas": { "type": "array", "items": { "type": "string" } }, "context_aliases": { "type": "array", "items": { "type": "string" } }, "table_name": { "type": "string" }, "version": { "type": "string", "minLength": 1, "maxLength": 1 } }, "anyOf": [ { "required": [ "event_name", "self_describing_event_schema" ] }, { "required": [ "event_name", "context_schemas" ] }, { "required": [ "event_name", "event_columns" ] } ], "additionalProperties": False }, "minItems": 1 }, "users": { "type": "array", "items": { "type": "string" } } }, "additionalProperties": False, "type": "object", "required": [ "config", "events" ], "self": { "name": "normalize-config", "format": "jsonschema", "version": "1-0-0" } }
+config_schema = {"description": "Schema for the Snowplow dbt normalize python script configuration", "properties": { "config": { "type": "object", "properties": { "resolver_file_path": { "type": "string" }, "filtered_events_table_name": { "type": "string" }, "users_table_name": { "type": "string" }, "validate_schemas": { "type": "boolean" }, "overwrite": { "type": "boolean" }, "models_folder": { "type": "string" }, "models_prefix": { "type": "string" } }, "required": [ "resolver_file_path" ], "additionalProperties": False }, "events": { "type": "array", "items": { "type": "object", "properties": { "event_name": { "type": "string" }, "event_columns": { "type": "array", "items": { "type": "string" } }, "self_describing_event_schema": { "type": "string" }, "context_schemas": { "type": "array", "items": { "type": "string" } }, "context_aliases": { "type": "array", "items": { "type": "string" } }, "table_name": { "type": "string" }, "version": { "type": "string", "minLength": 1, "maxLength": 1 } }, "anyOf": [ { "required": [ "event_name", "self_describing_event_schema" ] }, { "required": [ "event_name", "context_schemas" ] }, { "required": [ "event_name", "event_columns" ] } ], "additionalProperties": False }, "minItems": 1 }, "users": { "type": "array", "items": { "type": "string" } } }, "additionalProperties": False, "type": "object", "required": [ "config", "events" ], "self": { "name": "normalize-config", "format": "jsonschema", "version": "1-0-0" } }
 
 config_help = """
 JSON Config file structure:
@@ -257,7 +262,8 @@ JSON Config file structure:
         "users_table_name": <optional - string: name of users table, default events_users if user schema(s) provided>,
         "validate_schemas": <optional - boolean: if you want to validate schemas loaded from each iglu registry or not, default true>,
         "overwrite": <optional - boolean: overwrite existing model files or not, default true>,
-        "models_folder": <optional - string: folder under models/ to place the models, default snowplow_normalized_events>
+        "models_folder": <optional - string: folder under models/ to place the models, default snowplow_normalized_events>,
+        "models_prefix": <optional - string: prefix used for models when table_name is not provided, use '' for no prefix, default snowplow>
     },
     "events":[
         {
