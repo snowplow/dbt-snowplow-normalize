@@ -62,13 +62,14 @@ validate_schemas = config.get('config').get('overwrite') or True
 overwrite = config.get('config').get('overwrite') or True
 resolver_file_path = config.get('config').get('resolver_file_path')
 models_folder = config.get('config').get('models_folder') or 'snowplow_normalized_events'
-user_table_name = config.get('config').get('users_table_name') or 'events_users'
+user_table_name = config.get('config').get('users_table_name') or 'snowplow_events_users'
+models_prefix = config.get('config').get('models_prefix') or 'snowplow'
 
 # Run Cleanup if required
 if args.cleanUp:
-    cleanup_models(event_names, sde_urls, versions, table_names, models_folder, user_table_name, filtered_events_table_name, args.dryRun)
+    cleanup_models(event_names, sde_urls, versions, table_names, models_prefix, models_folder, user_table_name, filtered_events_table_name, args.dryRun)
 
-model_names = generate_names(event_names, sde_urls, versions, table_names)
+model_names = generate_names(event_names, sde_urls, versions, table_names, models_prefix)
 
 # Check for duplicate model names
 seen = set()

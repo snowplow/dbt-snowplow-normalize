@@ -30,19 +30,20 @@ def compare(s1, s2):
 def test_url_to_column(test_input, expected):
     assert url_to_column(test_input) == expected
 
-@pytest.mark.parametrize("test_input_events,test_input_urls,test_input_versions, test_input_tables,expected", [
-    (['event1', 'event2', 'event3'], [None, None, None], [None, '5', '9'], [None, None, None], ['event1_1', 'event2_5', 'event3_9']),
-    (['event1', 'event2', 'event3'], ['iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', 'iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0', 'iglu:com.snowplowanalytics.snowplow/site_search/jsonschema/1-0-0'], ['5', '2', '9'], [None, None, None], ['event1_1', 'event2_1', 'event3_1']),
-    (['event1', 'event2', 'event3'], ['iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', None, 'iglu:com.snowplowanalytics.snowplow/site_search/jsonschema/1-0-0'], ['5', '2', '9'], ['name1', 'name2', 'name3'], ['name1_1', 'name2_2', 'name3_1'])
+@pytest.mark.parametrize("test_input_events,test_input_urls,test_input_versions,test_input_tables,test_prefix,expected", [
+    (['event1', 'event2', 'event3'], [None, None, None], [None, '5', '9'], [None, None, None], 'itsaprefix', ['itsaprefix_event1_1', 'itsaprefix_event2_5', 'itsaprefix_event3_9']),
+    (['event1', 'event2', 'event3'], ['iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', 'iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0', 'iglu:com.snowplowanalytics.snowplow/site_search/jsonschema/1-0-0'], ['5', '2', '9'], [None, None, None], 'itsaprefix', ['itsaprefix_event1_1', 'itsaprefix_event2_1', 'itsaprefix_event3_1']),
+    (['event1', 'event2', 'event3'], ['iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', None, 'iglu:com.snowplowanalytics.snowplow/site_search/jsonschema/1-0-0'], ['5', '2', '9'], ['name1', 'name2', 'name3'], 'itsaprefix', ['name1_1', 'name2_2', 'name3_1'])
     ])
-def test_url_to_column(test_input_events, test_input_urls, test_input_versions, test_input_tables, expected):
-    assert generate_names(test_input_events, test_input_urls, test_input_versions, test_input_tables) == expected
+def test_generate_names(test_input_events, test_input_urls, test_input_versions, test_input_tables, test_prefix, expected):
+    assert generate_names(test_input_events, test_input_urls, test_input_versions, test_input_tables, test_prefix) == expected
+
 
 
 def test_duplicates(capfd):
     system(f'python {os.path.join("utils", "snowplow_normalize_model_gen.py")} {os.path.join("utils", "tests", "test_normalize_config_duplicate.json")}')
     out, err = capfd.readouterr()
-    assert re.match(r"^KeyError: \"Configruation leads to duplicate event names, please remove the duplicates and try again\. Duplicates: \['event_name1_1'\]\"$", err.split('\n')[-2])
+    assert re.match(r"^KeyError: \"Configruation leads to duplicate event names, please remove the duplicates and try again\. Duplicates: \['snowplow_event_name1_1'\]\"$", err.split('\n')[-2])
 
 class Test_types:
     def test_get_types(self):
@@ -342,6 +343,7 @@ class Test_cleanup_models:
                 models_folder= setup_teardown.get('model_folder'),
                 user_table_name= setup_teardown.get('users_table'),
                 filtered_events_table_name= setup_teardown.get('filtered_table'),
+                models_prefix = '',
                 dry_run= False
             )
         out, err = capfd.readouterr()
@@ -368,6 +370,7 @@ class Test_cleanup_models:
                 models_folder= setup_teardown.get('model_folder'),
                 user_table_name= setup_teardown.get('users_table'),
                 filtered_events_table_name= setup_teardown.get('filtered_table'),
+                models_prefix = '',
                 dry_run= False
             )
         out, err = capfd.readouterr()
@@ -395,6 +398,7 @@ class Test_cleanup_models:
                 models_folder= setup_teardown.get('model_folder'),
                 user_table_name= setup_teardown.get('users_table'),
                 filtered_events_table_name= setup_teardown.get('filtered_table'),
+                models_prefix = '',
                 dry_run= False
             )
         out, err = capfd.readouterr()
@@ -420,6 +424,7 @@ class Test_cleanup_models:
                 models_folder= setup_teardown.get('model_folder'),
                 user_table_name= setup_teardown.get('users_table'),
                 filtered_events_table_name= setup_teardown.get('filtered_table'),
+                models_prefix = '',
                 dry_run= False
             )
         out, err = capfd.readouterr()
@@ -445,6 +450,7 @@ class Test_cleanup_models:
                 models_folder= setup_teardown.get('model_folder'),
                 user_table_name= setup_teardown.get('users_table'),
                 filtered_events_table_name= setup_teardown.get('filtered_table'),
+                models_prefix = '',
                 dry_run= False
             )
         out, err = capfd.readouterr()
@@ -471,6 +477,7 @@ class Test_cleanup_models:
                 models_folder= setup_teardown.get('model_folder'),
                 user_table_name= setup_teardown.get('users_table'),
                 filtered_events_table_name= setup_teardown.get('filtered_table'),
+                models_prefix = '',
                 dry_run= False
             )
         out, err = capfd.readouterr()
@@ -496,6 +503,7 @@ class Test_cleanup_models:
                 models_folder= setup_teardown.get('model_folder'),
                 user_table_name= setup_teardown.get('users_table'),
                 filtered_events_table_name= 'dummy_name',
+                models_prefix = '',
                 dry_run= False
             )
         out, err = capfd.readouterr()
@@ -521,6 +529,7 @@ class Test_cleanup_models:
                 models_folder= setup_teardown.get('model_folder'),
                 user_table_name= 'dummy_users',
                 filtered_events_table_name=  setup_teardown.get('filtered_table'),
+                models_prefix = '',
                 dry_run= False
             )
         out, err = capfd.readouterr()
@@ -546,6 +555,7 @@ class Test_cleanup_models:
                 models_folder= setup_teardown.get('model_folder'),
                 user_table_name= 'events_users',
                 filtered_events_table_name= '',
+                models_prefix = '',
                 dry_run= False
             )
         out, err = capfd.readouterr()
@@ -597,7 +607,7 @@ class Test_model_output:
         assert compare(output, expected)
 
     def test_default_name(self, setup_teardown):
-        with open(os.path.join('models', setup_teardown, 'event_name1_1.sql')) as file:
+        with open(os.path.join('models', setup_teardown, 'itsaprefix_event_name1_1.sql')) as file:
             output = file.read()
 
         with open(os.path.join('utils', 'tests', 'expected', 'event_name1_1.sql')) as file:

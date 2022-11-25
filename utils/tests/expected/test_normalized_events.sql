@@ -21,7 +21,7 @@ select
     , DATE(collector_tstamp) as collector_tstamp_date
     {%- endif %}
     , 'event_name1' as event_name
-    , 'event_name1_1' as event_table_name
+    , 'itsaprefix_event_name1_1' as event_table_name
 from
     {{ ref('snowplow_web_base_events_this_run') }}
 where

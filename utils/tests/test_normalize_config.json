@@ -5,7 +5,8 @@
         "users_table_name":"test_events_users",
         "validate_schemas": true,
         "overwrite": true,
-        "models_folder": "$1"
+        "models_folder": "$1",
+        "models_prefix": "itsaprefix"
     },
     "events":[
         {
