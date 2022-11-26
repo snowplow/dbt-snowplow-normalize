@@ -11,8 +11,6 @@ This dbt package:
 
 Please refer to the [doc site](https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/) for a full breakdown of the package.
 
-> Note that currently only data processed by the [Snowplow Web dbt package](https://github.com/snowplow/dbt-snowplow-web) is supported and any filters applied within this package will also be applied here e.g. `app_id`.
-
 ### Adapter Support
 
 The snowplow-normalize v0.1.0 package currently supports BigQuery, Databricks & Snowflake.
@@ -24,9 +22,7 @@ The snowplow-normalize v0.1.0 package currently supports BigQuery, Databricks & 
 
 ### Requirements
 
-- A dataset of web events from the [Snowplow JavaScript tracker][tracker-docs] must be available in the database.
-- Have the [`webPage` context][webpage-context] enabled.
-- The [Snowplow Web dbt package](https://github.com/snowplow/dbt-snowplow-web)
+- A dataset of Snowplow events must be available in the database.
 
 ### Installation
 
@@ -38,7 +34,7 @@ Please refer to the [doc site][snowplow-normalize-docs] for details on how to co
 
 ### Models
 
-This package doesn't contain any models directly, however it is used to produce 3 types of models:
+This package only contains the incremental models needed to efficiently process new events for your models, see the docs on [incremental logic](https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/dbt-advanced-usage/dbt-incremental-logic/) for more information. The package does however produce 3 types of models:
 
 | Model                     | Description                                                                                |
 | ------------------------- | ------------------------------------------------------------------------------------------ |
@@ -73,7 +69,6 @@ limitations under the License.
 [tracker-classification]: https://docs.snowplow.io/docs/collecting-data/collecting-from-own-applications/tracker-maintenance-classification/
 [early-release]: https://img.shields.io/static/v1?style=flat&label=Snowplow&message=Early%20Release&color=014477&labelColor=9ba0aa&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAeFBMVEVMaXGXANeYANeXANZbAJmXANeUANSQAM+XANeMAMpaAJhZAJeZANiXANaXANaOAM2WANVnAKWXANZ9ALtmAKVaAJmXANZaAJlXAJZdAJxaAJlZAJdbAJlbAJmQAM+UANKZANhhAJ+EAL+BAL9oAKZnAKVjAKF1ALNBd8J1AAAAKHRSTlMAa1hWXyteBTQJIEwRgUh2JjJon21wcBgNfmc+JlOBQjwezWF2l5dXzkW3/wAAAHpJREFUeNokhQOCA1EAxTL85hi7dXv/E5YPCYBq5DeN4pcqV1XbtW/xTVMIMAZE0cBHEaZhBmIQwCFofeprPUHqjmD/+7peztd62dWQRkvrQayXkn01f/gWp2CrxfjY7rcZ5V7DEMDQgmEozFpZqLUYDsNwOqbnMLwPAJEwCopZxKttAAAAAElFTkSuQmCC
 [tracker-docs]: https://docs.snowplow.io/docs/collecting-data/collecting-from-own-applications/
-[webpage-context]: https://docs.snowplow.io/docs/collecting-data/collecting-from-own-applications/javascript-trackers/javascript-tracker/javascript-tracker-v3/tracker-setup/initialization-options/#Adding_predefined_contexts
 [dbt-package-docs]: https://docs.getdbt.com/docs/building-a-dbt-project/package-management
 [discourse-image]: https://img.shields.io/discourse/posts?server=https%3A%2F%2Fdiscourse.snowplow.io%2F
 [discourse]: http://discourse.snowplow.io/

@@ -38,10 +38,10 @@ select
     {%- endfor -%}
     {%- endif %}
 from
-    {{ ref('snowplow_web_base_events_this_run') }}
+    {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     event_name = '{{ event_name }}'
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
 {% endmacro %}
 
 
@@ -88,10 +88,10 @@ select
     {%- endfor -%}
     {%- endif %}
 from
-    {{ ref('snowplow_web_base_events_this_run') }}
+    {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     event_name = '{{ event_name }}'
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
 {% endmacro %}
 
 {% macro databricks__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
@@ -147,8 +147,8 @@ select
     {%- endfor -%}
     {%- endif %}
 from
-    {{ ref('snowplow_web_base_events_this_run') }}
+    {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     event_name = '{{ event_name }}'
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
 {% endmacro %}

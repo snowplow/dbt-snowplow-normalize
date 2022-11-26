@@ -1,5 +1,5 @@
 {{ config(
-    tags = "snowplow_web_incremental",
+    tags = "snowplow_normalize_incremental",
     materialized = var("snowplow__incremental_materialization", "snowplow_incremental"),
     unique_key = "user_id",
     upsert_date_key = "latest_collector_tstamp",
