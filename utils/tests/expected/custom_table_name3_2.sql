@@ -15,7 +15,7 @@
 ) }}
 
 {%- set event_name = "event_name3" -%}
-{%- set flat_cols = [] -%}
+{%- set flat_cols = ['app_id', 'domain_userid'] -%}
 {%- set sde_col = "" -%}
 {%- set sde_keys = [] -%}
 {%- set sde_types = [] -%}

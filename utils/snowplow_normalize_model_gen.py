@@ -56,7 +56,6 @@ for event in config.get('events'):
     table_names.append(event.get('table_name'))
     versions.append(event.get('version'))
 
-
 # Set defaults if they don't exist
 validate_schemas = config.get('config').get('overwrite') or True
 overwrite = config.get('config').get('overwrite') or True
@@ -147,7 +146,7 @@ for i in range(len(event_names)):
     context_url = context_urls[i]
     flat_col = flat_cols[i]
     # Remove columns already included
-    flat_col = list(set(flat_col).difference({'event_id', 'collector_tstamp'})).sort()
+    flat_col = sorted(list(set(flat_col).difference({'event_id', 'collector_tstamp'})))
     context_alias = context_aliases[i]
 
     if sde_url is not None:

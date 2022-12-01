@@ -15,7 +15,7 @@
 ) }}
 
 {%- set event_name = "event_name4" -%}
-{%- set flat_cols = [] -%}
+{%- set flat_cols = ['app_id', 'domain_userid'] -%}
 {%- set sde_col = "UNSTRUCT_EVENT_COM_SNOWPLOWANALYTICS_SNOWPLOW_LINK_CLICK_1_0_1" -%}
 {%- set sde_keys = ['elementId', 'elementClasses', 'elementTarget', 'targetUrl', 'elementContent'] -%}
 {%- set sde_types = ['string', 'array', 'string', 'string', 'string'] -%}

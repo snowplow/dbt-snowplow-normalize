@@ -35,7 +35,8 @@
             "event_name": "event_name3",
             "event_columns": [
                 "domain_userid",
-                "app_id"
+                "app_id",
+                "collector_tstamp"
             ],
             "context_schemas":[
                 "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
