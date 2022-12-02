@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: snowplow_normalize_incremental_manifest
+    description: '{{ doc("table_base_incremental_manifest") }}'
+    columns:
+      - name: model
+        description: The name of the model.
+        tags:
+          - primary-key
+        tests:
+          - unique
+          - not_null
+      - name: last_success
+        description: The latest event consumed by the model, based on `collector_tstamp`

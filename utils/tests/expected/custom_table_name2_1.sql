@@ -1,5 +1,5 @@
 {{ config(
-    tags = "snowplow_web_incremental",
+    tags = "snowplow_normalize_incremental",
     materialized = var("snowplow__incremental_materialization", "snowplow_incremental"),
     unique_key = "event_id",
     upsert_date_key = "collector_tstamp",
@@ -15,7 +15,7 @@
 ) }}
 
 {%- set event_name = "event_name2" -%}
-{%- set flat_cols = [] -%}
+{%- set flat_cols = ['app_id', 'domain_userid'] -%}
 {%- set sde_col = "UNSTRUCT_EVENT_COM_SNOWPLOWANALYTICS_SNOWPLOW_LINK_CLICK_1_0_1" -%}
 {%- set sde_keys = ['elementId', 'elementClasses', 'elementTarget', 'targetUrl', 'elementContent'] -%}
 {%- set sde_types = ['string', 'array', 'string', 'string', 'string'] -%}

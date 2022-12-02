@@ -1,5 +1,5 @@
 {{ config(
-    tags = "snowplow_web_incremental",
+    tags = "snowplow_normalize_incremental",
     materialized = var("snowplow__incremental_materialization", "snowplow_incremental"),
     unique_key = "event_id",
     upsert_date_key = "collector_tstamp",
@@ -23,10 +23,10 @@ select
     , 'event_name1' as event_name
     , 'itsaprefix_event_name1_1' as event_table_name
 from
-    {{ ref('snowplow_web_base_events_this_run') }}
+    {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     event_name = 'event_name1'
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
 
 UNION ALL
 
@@ -39,10 +39,10 @@ select
     , 'event_name2' as event_name
     , 'custom_table_name2_1' as event_table_name
 from
-    {{ ref('snowplow_web_base_events_this_run') }}
+    {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     event_name = 'event_name2'
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
 
 UNION ALL
 
@@ -55,10 +55,10 @@ select
     , 'event_name3' as event_name
     , 'custom_table_name3_2' as event_table_name
 from
-    {{ ref('snowplow_web_base_events_this_run') }}
+    {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     event_name = 'event_name3'
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
 
 UNION ALL
 
@@ -71,7 +71,7 @@ select
     , 'event_name4' as event_name
     , 'custom_table_name4_1' as event_table_name
 from
-    {{ ref('snowplow_web_base_events_this_run') }}
+    {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     event_name = 'event_name4'
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}

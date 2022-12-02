@@ -22,10 +22,10 @@ select
     {%- endfor -%}
     {%- endif %}
 from
-    {{ ref('snowplow_web_base_events_this_run') }}
+    {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     user_id is not null
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
 qualify
     row_number() over (partition by user_id order by collector_tstamp desc) = 1
 {% endmacro %}
@@ -57,10 +57,10 @@ select
     {%- endif %}
     , row_number() over (partition by user_id order by collector_tstamp desc) as rn
 from
-    {{ ref('snowplow_web_base_events_this_run') }}
+    {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     user_id is not null
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
 )
 
 select
@@ -107,10 +107,10 @@ select
     {%- endif %}
     , row_number() over (partition by user_id order by collector_tstamp desc) as rn
 from
-    {{ ref('snowplow_web_base_events_this_run') }}
+    {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     user_id is not null
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_web") }}
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
 )
 
 select

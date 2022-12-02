@@ -56,7 +56,6 @@ for event in config.get('events'):
     table_names.append(event.get('table_name'))
     versions.append(event.get('version'))
 
-
 # Set defaults if they don't exist
 validate_schemas = config.get('config').get('overwrite') or True
 overwrite = config.get('config').get('overwrite') or True
@@ -147,7 +146,7 @@ for i in range(len(event_names)):
     context_url = context_urls[i]
     flat_col = flat_cols[i]
     # Remove columns already included
-    flat_col = list(set(flat_col).difference({'event_id', 'collector_tstamp'})).sort()
+    flat_col = sorted(list(set(flat_col).difference({'event_id', 'collector_tstamp'})))
     context_alias = context_aliases[i]
 
     if sde_url is not None:
@@ -185,7 +184,7 @@ for i in range(len(event_names)):
 
     # Write model string
     model_content = f"""{{{{ config(
-    tags = "snowplow_web_incremental",
+    tags = "snowplow_normalize_incremental",
     materialized = var("snowplow__incremental_materialization", "snowplow_incremental"),
     unique_key = "event_id",
     upsert_date_key = "collector_tstamp",
@@ -238,7 +237,7 @@ if filtered_events_table_name is not None:
     verboseprint('Generating filtered events table model...')
     n_models = len(event_names)
     filtered_model_content = f"""{{{{ config(
-    tags = "snowplow_web_incremental",
+    tags = "snowplow_normalize_incremental",
     materialized = var("snowplow__incremental_materialization", "snowplow_incremental"),
     unique_key = "event_id",
     upsert_date_key = "collector_tstamp",
@@ -266,10 +265,10 @@ select
     , '{event_name}' as event_name
     , '{model}' as event_table_name
 from
-    {{{{ ref('snowplow_web_base_events_this_run') }}}}
+    {{{{ ref('snowplow_normalize_base_events_this_run') }}}}
 where
     event_name = '{event_name}'
-    and {{{{ snowplow_utils.is_run_with_new_events("snowplow_web") }}}}
+    and {{{{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}}}
         """
         if n != n_models -1:
             filtered_model_content += """
@@ -301,7 +300,7 @@ if user_urls is not None:
     user_types = [get_types(user) for user in user_jsons]
 
     users_model_content = f"""{{{{ config(
-    tags = "snowplow_web_incremental",
+    tags = "snowplow_normalize_incremental",
     materialized = var("snowplow__incremental_materialization", "snowplow_incremental"),
     unique_key = "user_id",
     upsert_date_key = "latest_collector_tstamp",

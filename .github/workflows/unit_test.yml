@@ -31,10 +31,10 @@ jobs:
         pytest utils/tests --doctest-modules --junitxml=junit/test-results.xml --cov=utils/functions --cov-report=xml:junit/coverage.xml
     - name: Pytest coverage comment
       uses: MishaKav/pytest-coverage-comment@main
-      if: matrix.python-version == '3.10'
       with:
         pytest-xml-coverage-path: junit/coverage.xml
-        title: Test Coverage Report
+        unique-id-for-comment: ${{ matrix.python-version }}
+        title: Test Coverage Report - Python ${{ matrix.python-version }}
         badge-title: Test Coverage
         hide-badge: false
         hide-report: false
@@ -43,4 +43,4 @@ jobs:
         report-only-changed-files: false
         remove-link-from-badge: false
         junitxml-path: junit/test-results.xml
-        junitxml-title: Python 3.10 Test Results
+        junitxml-title: Python ${{ matrix.python-version }} Test Results

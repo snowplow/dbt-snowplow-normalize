@@ -4,7 +4,7 @@
 
 # Snowplow Normalize Package
 
-Welcome to the model documentation site for the Snowplow Normalize dbt package. The package provides 2 macros and a python script that is used to generate normalized data warehouse models (i.e. 1 table per event type); these models provide a table per event type that you specify, and can also produce a thin table of the normalized events and a user table, for use within downstream ETL tools. 
+Welcome to the model documentation site for the Snowplow Normalize dbt package. The package provides 2 macros and a python script that is used to generate normalized data warehouse models (i.e. 1 table per event type); these models provide a table per event type that you specify, and can also produce a thin table of the normalized events and a user table, for use within downstream ETL tools. This package also contains the `manifest` and `_this_run` tables to support the incremental logic.
 
 **For more information, including a detailed operation guide please visit the [Snowplow Docs](https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/).**
 
@@ -12,7 +12,7 @@ Welcome to the model documentation site for the Snowplow Normalize dbt package. 
 
 ## Overview
 
-This package contains a python script that is designed to be used in conjunction with the macros provided to generate models that normalize the Snowplow `atomic.events` table into individual tables. For more information on usage and the design of the models produced, see the [Package Docs](https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/dbt-normalize-model).
+This package contains a python script that is designed to be used in conjunction with the macros provided to generate models that normalize the Snowplow `atomic.events` table into individual tables. These models use the standard Snowplow `_this_run` logic to only process new events. For more information on usage and the design of the models produced, see the [Package Docs](https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/dbt-normalize-model).
 
 ## Installation
 
