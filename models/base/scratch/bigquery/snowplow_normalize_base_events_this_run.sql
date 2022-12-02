@@ -4,7 +4,7 @@
   )
 }}
 
-{%- set lower_limit, upper_limit, sesison_start_limit = snowplow_utils.return_base_new_event_limits(ref('snowplow_normalize_base_new_event_limits')) %}
+{%- set lower_limit, upper_limit, session_start_limit = snowplow_utils.return_base_new_event_limits(ref('snowplow_normalize_base_new_event_limits')) %}
 
 -- without downstream joins, it's safe to dedupe by picking the first event_id found.
 select

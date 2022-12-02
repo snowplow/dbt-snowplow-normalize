@@ -68,8 +68,3 @@ models:
           enabled: "{{ target.type in ['databricks', 'spark'] | as_bool() }}"
         snowflake:
           enabled: "{{ target.type == 'snowflake' | as_bool() }}"
-    placeholder:
-      scratch:
-        +schema: "scratch"
-        +tags: "scratch"
-        +enabled: false
