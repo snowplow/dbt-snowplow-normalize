@@ -3,7 +3,7 @@ name: Release
 #####
 # Your changelog must be called CHANGELOG (no ext) and use the expected format (Package_Name tag_number (date) \n ------- \n changes...)
 # Any text between the previous and new version in the changelog will be used as the text for the release, so use markdown syntax as needed
-# The package_name variable must match what is in your CHANELOG and will be used as part of the release name
+# The package_name variable must match what is in your CHANGELOG and will be used as part of the release name
 # This workflow maybe supports pre-release versions (with rc in the version) - but no promises.
 #####
 
