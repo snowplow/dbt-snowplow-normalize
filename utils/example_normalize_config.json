@@ -1,0 +1,42 @@
+{
+    "config":{
+        "resolver_file_path": "utils/example_resolver_config.json",
+        "filtered_events_table_name":"snowplow_events_normalized",
+        "users_table_name":"snowplow_context_users",
+        "validate_schemas": true,
+        "overwrite": true,
+        "models_folder": "snowplow_normalized_events",
+        "models_prefix": "snowplow"
+    },
+    "events":[
+        {
+            "event_name": "page_view",
+            "event_columns": [
+                "domain_userid",
+                "app_id",
+                "load_tstamp",
+                "page_url"
+            ],
+            "context_schemas":[
+                "iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0",
+                "iglu:nl.basjes/yauaa_context/jsonschema/1-0-4"
+            ],
+            "context_aliases": ["page", "yauaa"],
+            "table_name": "snowplow_page_view_events",
+            "version": "1"
+        },
+        {
+            "event_name": "link_click",
+            "event_columns": [
+                "domain_userid",
+                "app_id",
+                "refr_urlpath"
+            ],
+            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
+            "context_schemas":[
+                "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0"
+            ]
+        }
+    ],
+    "users":["iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0"]
+}

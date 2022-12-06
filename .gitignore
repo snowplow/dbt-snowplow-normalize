@@ -34,7 +34,6 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -184,3 +183,4 @@ cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/python,dbt,visualstudiocode
 resolver_config.json
+junit/*

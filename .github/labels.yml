@@ -1,34 +1,16 @@
 - name: "category:breaking_change"
   color: '1e1037'
   description: "A breaking change will be introduced if this issue is completed."
-- name: "category:context"
-  color: '6738b8'
-  description: "A new context entity, or changing an existing one, is required."
-- name: "category:data_loss"
-  color: 'f1ff1d'
-  description: "Data loss might be happening."
-- name: "category:dependencies"
-  color: 'a738b8'
-  description: "Dependency updates."
 - name: "category:documentation"
   color: '3849b8'
   description: "About the documentation."
-- name: "category:events"
-  color: '6372ff'
-  description: "A new event type, or changing an existing one, is required."
-- name: "category:help_wanted"
-  color: '69f6ff'
-  description: "Help is wanted to help solve this issue."
-- name: "category:testing"
-  color: '9e62dd'
-  description: "About the tests."
 - name: "cla:no"
   color: '313131'
   description: "[Auto generated] Snowplow Contributor License Agreement has not been signed."
 - name: "cla:yes"
   color: 'c1c1c1'
   description: "[Auto generated] Snowplow Contributor License Agreement has been signed."
-- name: good first issue
+- name: "good first issue"
   color: '69f6ff'
   description: "Good issue for a first time contributor."
 - name: "priority:high"
@@ -61,10 +43,19 @@
 - name: "status:wont_fix"
   color: '04311d'
   description: "Can't or won't be fixed."
+- name: "status:info_needed"
+  color: '56B9BF'
+  description: "More information is needed from filer for issue to be actionable"
+- name: "status:do_not_merge"
+  color: 'D93F0B'
+  description: "Flag to denote a Issue or PR which should not yet be merged (usually pending a release)"
+- name: "status:help_wanted"
+  color: '69f6ff'
+  description: "Help is wanted to help solve this issue."
 - name: "type:admin"
   color: 'fdffd2'
   description: 'About code or repo management.'
-- name: "type:defect"
+- name: "type:bug"
   color: '4c381f'
   description: 'Bugs or weaknesses. The issue has to contain steps to reproduce.'
 - name: "type:enhancement"
@@ -73,3 +64,18 @@
 - name: "type:question"
   color: 'ffebd2'
   description: "Questions to the maintainers."
+- name: "category:models"
+  color: '6738b8'
+  description: "Related to the models in the package."
+- name: "category:macros"
+  color: 'f1ff1d'
+  description: "Related to the macros in the package."
+- name: "category:tests"
+  color: 'a738b8'
+  description: "Related to the tests in the package."
+- name: "category:other"
+  color: '6372ff'
+  description: "Related to other parts of the package or repo itself."
+#- name: "category:4"
+#  color: '9e62dd'
+#  description: "Desc"

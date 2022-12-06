@@ -1,0 +1,45 @@
+version: 2
+
+macros:
+  - name: normalize_events
+    description: A macro to produce a table from `base_events_this_run` with the input columns, for a single event type
+    arguments:
+      - name: event_name
+        type: string
+        description: Name of the event this table will be filtered to
+      - name: flat_cols
+        type: array
+        description: List of standard columns from the atomic.events table to include
+      - name: sde_col
+        type: string
+        description: Column name for the self-describing event to pull attributes from
+      - name: sde_keys
+        type: array
+        description: List of keys/column names within the self describing event column to include
+      - name: sde_types
+        type: array
+        description: List of types of the values of the keys within the self describing event column (only used in Snowflake)
+      - name: context_cols
+        type: array
+        description: List of context columns from the atomic.events table to include
+      - name: context_keys
+        type: array of arrays
+        description: List of lists of keys/column names within the respective context column to include
+      - name: context_types
+        type: array of arrays
+        description: List of list of types of the values of the keys within the respective context column (only used in Snowflake)
+      - name: context_aliases
+        type: array
+        description: List of prefixes to apply to the respective context column keys to be used as final column names
+  - name: users_table
+    description: A macro to produce a users table from the `base_events_this_run` table, using the latest context values as defined by the collector_tstamp.
+    arguments:
+      - name: user_cols
+        type: array
+        description: List of (user related) context columns from the atomic.events table to include
+      - name: user_keys
+        type: array of arrays
+        description: List of lists of keys/column names within the respective user context column to include
+      - name: user_types
+        type: array of arrays
+        description: List of list of types of the values of the keys within the respective user context column (only used in Snowflake)

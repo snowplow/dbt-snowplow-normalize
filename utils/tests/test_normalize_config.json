@@ -1,0 +1,68 @@
+{
+    "config":{
+        "resolver_file_path": "default",
+        "filtered_events_table_name":"test_normalized_events",
+        "users_table_name":"test_events_users",
+        "validate_schemas": true,
+        "overwrite": true,
+        "models_folder": "$1",
+        "models_prefix": "itsaprefix"
+    },
+    "events":[
+        {
+            "event_name": "event_name1",
+            "event_columns": [
+                "domain_userid",
+                "app_id"
+            ],
+            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1"
+        },
+        {
+            "event_name": "event_name2",
+            "event_columns": [
+                "domain_userid",
+                "app_id"
+            ],
+            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
+            "context_schemas":[
+                "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
+                "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0"
+            ],
+            "table_name": "custom_table_name2",
+            "version": "2"
+        },
+        {
+            "event_name": "event_name3",
+            "event_columns": [
+                "domain_userid",
+                "app_id",
+                "collector_tstamp"
+            ],
+            "context_schemas":[
+                "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
+                "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0"
+            ],
+            "context_aliases": ["ua", "spiderbot"],
+            "table_name": "custom_table_name3",
+            "version": "2"
+        },
+        {
+            "event_name": "event_name4",
+            "event_columns": [
+                "domain_userid",
+                "app_id"
+            ],
+            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
+            "context_schemas":[
+                "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
+                "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0",
+                "iglu:nl.basjes/yauaa_context/jsonschema/1-0-1"
+            ],
+            "context_aliases": ["ua", "spiderbot", "yauaa"],
+            "table_name": "custom_table_name4",
+            "version": "9"
+        }
+    ],
+    "users":["iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
+            "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0"]
+}
