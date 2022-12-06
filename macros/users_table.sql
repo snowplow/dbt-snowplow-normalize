@@ -1,8 +1,8 @@
-{% macro users_table(user_cols = [], user_keys = [], user_types = []) %}
-    {{ return(adapter.dispatch('users_table', 'snowplow_normalize')(user_cols, user_keys, user_types)) }}
+{% macro users_table(user_cols = [], user_keys = [], user_types = [], test = false) %}
+    {{ return(adapter.dispatch('users_table', 'snowplow_normalize')(user_cols, user_keys, user_types, test)) }}
 {% endmacro %}
 
-{% macro snowflake__users_table(user_cols, user_keys, user_types) %}
+{% macro snowflake__users_table(user_cols, user_keys, user_types, test) %}
 {# Remove down to major version for Snowflake columns, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
@@ -25,13 +25,15 @@ from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     user_id is not null
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+    {% if not test %}
+        and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+    {%- endif -%}
 qualify
     row_number() over (partition by user_id order by collector_tstamp desc) = 1
 {% endmacro %}
 
 
-{% macro bigquery__users_table(user_cols, user_keys, user_types) %}
+{% macro bigquery__users_table(user_cols, user_keys, user_types, test) %}
 {# Replace keys with snake_case where needed #}
 {%- set user_keys_clean = [] -%}
 {%- for ind1 in range(user_keys|length) -%}
@@ -60,7 +62,9 @@ from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     user_id is not null
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+    {% if not test %}
+        and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+    {%- endif -%}
 )
 
 select
@@ -71,7 +75,7 @@ where
     rn = 1
 {% endmacro %}
 
-{% macro databricks__users_table(user_cols, user_keys, user_types) %}
+{% macro databricks__users_table(user_cols, user_keys, user_types, test) %}
 {# Remove down to major version for Databricks columns, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
@@ -110,7 +114,9 @@ from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     user_id is not null
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+    {% if not test %}
+        and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+    {%- endif -%}
 )
 
 select
