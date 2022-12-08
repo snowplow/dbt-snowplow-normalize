@@ -38,5 +38,13 @@
             ]
         }
     ],
-    "users":["iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0"]
+    "users":{
+        "user_id": {
+            "id_column": "userId",
+            "id_self_describing_event_schema": "iglu:com.google.analytics.measurement-protocol/user/jsonschema/1-0-0",
+            "id_context_schema": "iglu:com.zendesk.snowplow/user/jsonschema/1-0-0"
+        },
+        "user_contexts": ["iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
+            "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0"]
+    }
 }

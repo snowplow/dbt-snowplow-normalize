@@ -37,6 +37,15 @@ macros:
   - name: users_table
     description: A macro to produce a users table from the `base_events_this_run` table, using the latest context values as defined by the collector_tstamp.
     arguments:
+      - name: user_id_field
+        type: string
+        description: The name of the field to use as the unique user_id
+      - name: user_id_sde
+        type: string
+        description: The name of the SDE column that contains your user_id_field
+      - name: user_id_context
+        type: string
+        description: The name of the context column that contains your user_id_field, not used if user_id_sde is also provided
       - name: user_cols
         type: array
         description: List of (user related) context columns from the atomic.events table to include

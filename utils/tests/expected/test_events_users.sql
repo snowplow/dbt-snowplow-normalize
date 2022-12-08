@@ -19,6 +19,9 @@
 {%- set user_types = [['string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string'], ['boolean', 'string', 'string', 'string']] -%}
 
 {{ snowplow_normalize.users_table(
+    'userId',
+    'UNSTRUCT_EVENT_COM_GOOGLE_ANALYTICS_MEASUREMENT_PROTOCOL_USER_1_0_0',
+    'CONTEXTS_COM_ZENDESK_SNOWPLOW_USER_1_0_0',
     user_cols,
     user_keys,
     user_types
