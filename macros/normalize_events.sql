@@ -1,8 +1,8 @@
-{% macro normalize_events(event_name, flat_cols = [], sde_col = '', sde_keys = [], sde_types = [], context_cols = [], context_keys = [], context_types = [], context_aliases = []) %}
-    {{ return(adapter.dispatch('normalize_events', 'snowplow_normalize')(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases)) }}
+{% macro normalize_events(event_name, flat_cols = [], sde_col = '', sde_keys = [], sde_types = [], context_cols = [], context_keys = [], context_types = [], context_aliases = [], remove_new_event_check = false) %}
+    {{ return(adapter.dispatch('normalize_events', 'snowplow_normalize')(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases, remove_new_event_check)) }}
 {% endmacro %}
 
-{% macro snowflake__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
+{% macro snowflake__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases, remove_new_event_check) %}
 {# Remove down to major version for Snowflake columns, drop 2 last _X values #}
 {%- set sde_col = '_'.join(sde_col.split('_')[:-2]) -%}
 {%- set context_cols_clean = [] -%}
@@ -41,11 +41,13 @@ from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     event_name = '{{ event_name }}'
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+    {% if not remove_new_event_check %}
+        and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+    {%- endif -%}
 {% endmacro %}
 
 
-{% macro bigquery__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
+{% macro bigquery__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases, remove_new_event_check) %}
 {# Replace keys with snake_case where needed #}
 {%- set sde_keys_clean = [] -%}
 {%- set context_keys_clean = [] -%}
@@ -91,10 +93,12 @@ from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     event_name = '{{ event_name }}'
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+    {% if not remove_new_event_check %}
+        and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+    {%- endif -%}
 {% endmacro %}
 
-{% macro databricks__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases) %}
+{% macro databricks__normalize_events(event_name, flat_cols, sde_col, sde_keys, sde_types, context_cols, context_keys, context_types, context_aliases, remove_new_event_check) %}
 {# Remove down to major version for Databricks columns, drop 2 last _X values #}
 {%- set sde_col = '_'.join(sde_col.split('_')[:-2]) -%}
 {%- set context_cols_clean = [] -%}
@@ -150,5 +154,7 @@ from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
     event_name = '{{ event_name }}'
-    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+    {% if not remove_new_event_check %}
+        and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+    {%- endif -%}
 {% endmacro %}
