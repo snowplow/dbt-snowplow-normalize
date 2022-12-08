@@ -9,7 +9,7 @@ It runs 9 tests:
 5) camel case with multiple workds
 6) camel case ending with a series of capitals
 7) camel case with a series of capitals in the middle
-8) camel case with hypthons
+8) camel case with hyphens
 9) camel case with numbers
 
 
@@ -31,7 +31,7 @@ It runs 9 tests:
         "camel_multi_word" : "hello_world_earth",
         "camel_end_with_caps" :"hello_world_earth",
         "camel_middle_caps" : "hello_world_earth",
-        "camel_hypthons" : "hello_world_earth",
+        "camel_hyphens" : "hello_world_earth",
         "camel_numbers" : "hello_world23_earth"
     } %}
 
@@ -44,7 +44,7 @@ It runs 9 tests:
         "camel_end_with_caps" : snowplow_normalize.snakeify_case('helloWorldEARTH'),
         "camel_middle_caps" : snowplow_normalize.snakeify_case('helloWORLDEarth'),
         "camel_middle_caps" : snowplow_normalize.snakeify_case('helloWORLDEarth'),
-        "camel_hypthons" : snowplow_normalize.snakeify_case('helloWorld-Earth'),
+        "camel_hyphens" : snowplow_normalize.snakeify_case('helloWorld-Earth'),
         "camel_numbers" : snowplow_normalize.snakeify_case('helloWorld23Earth')
         }
     %}

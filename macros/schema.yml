@@ -31,9 +31,9 @@ macros:
       - name: context_aliases
         type: array
         description: List of prefixes to apply to the respective context column keys to be used as final column names
-      - name: test
+      - name: remove_new_event_check
         type: boolean
-        description: A flag to disable the `with_new_events` part of the macro to allow for integration tests to run
+        description: A flag to disable the `with_new_events` part of the macro, to allow for integration tests to run
   - name: users_table
     description: A macro to produce a users table from the `base_events_this_run` table, using the latest context values as defined by the collector_tstamp.
     arguments:
@@ -46,3 +46,6 @@ macros:
       - name: user_types
         type: array of arrays
         description: List of list of types of the values of the keys within the respective user context column (only used in Snowflake)
+      - name: remove_new_event_check
+        type: boolean
+        description: A flag to disable the `with_new_events` part of the macro, to allow for integration tests to run
