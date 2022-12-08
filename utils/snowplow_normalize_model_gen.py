@@ -37,7 +37,6 @@ if not validate_json(config, schema = config_schema, validate = True):
     raise ValueError('Invalid config file format, run with flag --configHelp for more information.')
 
 # Parse config values
-user_urls = config.get('users')
 filtered_events_table_name = config.get('config').get('filtered_events_table_name')
 event_names = []
 sde_urls = []
@@ -55,6 +54,20 @@ for event in config.get('events'):
     context_aliases.append(event.get('context_aliases'))
     table_names.append(event.get('table_name'))
     versions.append(event.get('version'))
+
+# Parse users
+user_urls = config.get('users', {}).get('user_contexts')
+user_id_column = config.get('users', {}).get('user_id', {}).get('id_column') or 'user_id'
+user_id_sde = config.get('users', {}).get('user_id', {}).get('id_self_describing_event_schema')
+user_id_context = config.get('users', {}).get('user_id', {}).get('id_context_schema')
+if user_id_sde is not None:
+    user_id_sde = 'UNSTRUCT_EVENT_' + url_to_column(urlparse(user_id_sde).path)
+else:
+    user_id_sde = ''
+if user_id_context is not None:
+    user_id_context = 'CONTEXTS_' + url_to_column(urlparse(user_id_context).path)
+else:
+    user_id_context = ''
 
 # Set defaults if they don't exist
 validate_schemas = config.get('config').get('overwrite') or True
@@ -320,6 +333,9 @@ if user_urls is not None:
 {{%- set user_types = {user_types or []} -%}}
 
 {{{{ snowplow_normalize.users_table(
+    '{user_id_column}',
+    '{user_id_sde}',
+    '{user_id_context}',
     user_cols,
     user_keys,
     user_types
