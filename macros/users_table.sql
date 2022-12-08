@@ -1,8 +1,8 @@
-{% macro users_table(user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false) %}
-    {{ return(adapter.dispatch('users_table', 'snowplow_normalize')(user_cols, user_keys, user_types, remove_new_event_check)) }}
+{% macro users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false) %}
+    {{ return(adapter.dispatch('users_table', 'snowplow_normalize')(user_id_field, user_id_sde, user_id_context, user_cols, user_keys, user_types, remove_new_event_check)) }}
 {% endmacro %}
 
-{% macro snowflake__users_table(user_cols, user_keys, user_types, remove_new_event_check) %}
+{% macro snowflake__users_table(user_id_field, user_id_sde, user_id_context, user_cols, user_keys, user_types, remove_new_event_check) %}
 {# Remove down to major version for Snowflake columns, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
@@ -10,8 +10,15 @@
 {%- endfor -%}
 
 
+with defined_user_id as (
 select
-    user_id
+    {% if user_id_sde == '' and user_id_context == ''%}
+    {{ user_id_field }} as user_id
+    {% elif user_id_sde != '' %}
+    {{ '_'.join(user_id_sde.split('_')[:-2]) }}:{{user_id_field}}::string as user_id
+    {% elif user_id_context != '' %}
+    {{ '_'.join(user_id_context.split('_')[:-2]) }}[0]:{{user_id_field}}::string as user_id
+    {%- endif %}
     , collector_tstamp as latest_collector_tstamp
     -- user column(s) from the event table
     {% if user_cols_clean|length > 0 %}
@@ -24,16 +31,24 @@ select
 from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
-    user_id is not null
+    1 = 1
     {% if not remove_new_event_check %}
         and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
     {%- endif -%}
+)
+
+select
+    *
+from
+    defined_user_id
+where
+    user_id is not null
 qualify
-    row_number() over (partition by user_id order by collector_tstamp desc) = 1
+    row_number() over (partition by user_id order by latest_collector_tstamp desc) = 1
 {% endmacro %}
 
 
-{% macro bigquery__users_table(user_cols, user_keys, user_types, remove_new_event_check) %}
+{% macro bigquery__users_table(user_id_field, user_id_sde, user_id_context, user_cols, user_keys, user_types, remove_new_event_check) %}
 {# Replace keys with snake_case where needed #}
 {%- set user_keys_clean = [] -%}
 {%- for ind1 in range(user_keys|length) -%}
@@ -45,26 +60,41 @@ qualify
 {%- endfor -%}
 
 
-with users_ordering as (
-select
-    user_id
-    , collector_tstamp as latest_collector_tstamp
-    -- user column(s) from the event table
-    {% if user_cols|length > 0 %}
-    {%- for col, col_ind in zip(user_cols, range(user_cols|length)) -%}
-    {%- for key in user_keys_clean[col_ind] -%}
-    , {{ col }}[SAFE_OFFSET(0)].{{ key }} as {{ key }}
-    {% endfor -%}
-    {%- endfor -%}
-    {%- endif %}
-    , row_number() over (partition by user_id order by collector_tstamp desc) as rn
-from
-    {{ ref('snowplow_normalize_base_events_this_run') }}
-where
-    user_id is not null
-    {% if not remove_new_event_check %}
-        and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
-    {%- endif -%}
+with defined_user_id as (
+    select
+        {% if user_id_sde == '' and user_id_context == ''%}
+        {{ user_id_field }} as user_id
+        {% elif user_id_sde != '' %}
+        {{ user_id_sde }}.{{snowplow_normalize.snakeify_case(user_id_field)}} as user_id
+        {% elif user_id_context != '' %}
+        {{ user_id_context }}[SAFE_OFFSET(0)].{{snowplow_normalize.snakeify_case(user_id_field)}} as user_id
+        {%- endif %}
+        , collector_tstamp as latest_collector_tstamp
+        -- user column(s) from the event table
+        {% if user_cols|length > 0 %}
+        {%- for col, col_ind in zip(user_cols, range(user_cols|length)) -%}
+        {%- for key in user_keys_clean[col_ind] -%}
+        , {{ col }}[SAFE_OFFSET(0)].{{ key }} as {{ key }}
+        {% endfor -%}
+        {%- endfor -%}
+        {%- endif %}
+    from
+        {{ ref('snowplow_normalize_base_events_this_run') }}
+    where
+        1 = 1
+        {% if not remove_new_event_check %}
+            and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+        {%- endif -%}
+),
+
+users_ordering as (
+    select
+        a.*
+        , row_number() over (partition by user_id order by latest_collector_tstamp desc) as rn
+    from
+        defined_user_id a
+    where
+        user_id is not null
 )
 
 select
@@ -75,7 +105,7 @@ where
     rn = 1
 {% endmacro %}
 
-{% macro databricks__users_table(user_cols, user_keys, user_types, remove_new_event_check) %}
+{% macro databricks__users_table(user_id_field, user_id_sde, user_id_context, user_cols, user_keys, user_types, remove_new_event_check) %}
 {# Remove down to major version for Databricks columns, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
@@ -94,29 +124,45 @@ where
 {%- endfor -%}
 
 
-with users_ordering as (
+with defined_user_id as (
+    select
+        {% if user_id_sde == '' and user_id_context == ''%}
+        {{ user_id_field }} as user_id
+        {% elif user_id_sde != '' %}
+        {{ '_'.join(user_id_sde.split('_')[:-2]) }}.{{snowplow_normalize.snakeify_case(user_id_field)}} as user_id
+        {% elif user_id_context != '' %}
+        {{ '_'.join(user_id_context.split('_')[:-2]) }}[0].{{snowplow_normalize.snakeify_case(user_id_field)}} as user_id
+        {%- endif %}
+        , collector_tstamp as latest_collector_tstamp
+        {% if target.type in ['databricks', 'spark'] -%}
+        , DATE(collector_tstamp) as latest_collector_tstamp_date
+        {%- endif %}
+        -- user column(s) from the event table
+        {% if user_cols_clean|length > 0 %}
+        {%- for col, col_ind in zip(user_cols_clean, range(user_cols_clean|length)) -%}
+        {%- for key in user_keys_clean[col_ind] -%}
+        , {{ col }}[0].{{ key }} as {{ key }}
+        {% endfor -%}
+        {%- endfor -%}
+        {%- endif %}
+    from
+        {{ ref('snowplow_normalize_base_events_this_run') }}
+    where
+        1 = 1
+        {% if not remove_new_event_check %}
+            and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+        {%- endif -%}
+
+),
+
+users_ordering as (
 select
-    user_id
-    , collector_tstamp as latest_collector_tstamp
-    {% if target.type in ['databricks', 'spark'] -%}
-    , DATE(collector_tstamp) as latest_collector_tstamp_date
-    {%- endif %}
-    -- user column(s) from the event table
-    {% if user_cols_clean|length > 0 %}
-    {%- for col, col_ind in zip(user_cols_clean, range(user_cols_clean|length)) -%}
-    {%- for key in user_keys_clean[col_ind] -%}
-    , {{ col }}[0].{{ key }} as {{ key }}
-    {% endfor -%}
-    {%- endfor -%}
-    {%- endif %}
-    , row_number() over (partition by user_id order by collector_tstamp desc) as rn
+    a.*
+    , row_number() over (partition by user_id order by latest_collector_tstamp desc) as rn
 from
-    {{ ref('snowplow_normalize_base_events_this_run') }}
+    defined_user_id a
 where
     user_id is not null
-    {% if not remove_new_event_check %}
-        and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
-    {%- endif -%}
 )
 
 select
