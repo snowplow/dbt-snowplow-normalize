@@ -19,7 +19,7 @@ assignees: ''
 ## Additional context
 <!-- Add any other context or screenshots about the feature request here. -->
 
-## Are you interested in contributing this feature?
+## Are you interested in contributing towards this feature?
 <!---
-Let us know if you want to contribute the feature, and whether would need a hand getting started
+Let us know if you want to contribute towards the feature, and whether you would need a hand getting started
 --->
