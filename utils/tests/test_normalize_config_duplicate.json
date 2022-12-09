@@ -9,20 +9,20 @@
     },
     "events":[
         {
-            "event_name": "event_name1",
+            "event_names": ["event_name1"],
             "event_columns": [
                 "domain_userid",
                 "app_id"
             ],
-            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1"
+            "self_describing_event_schemas": ["iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1"]
         },
         {
-            "event_name": "event_name2",
+            "event_names": ["event_name2"],
             "event_columns": [
                 "domain_userid",
                 "app_id"
             ],
-            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
+            "self_describing_event_schemas": ["iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1"],
             "context_schemas":[
                 "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
                 "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0"
@@ -31,7 +31,7 @@
             "version": "2"
         },
         {
-            "event_name": "event_name3",
+            "event_names": ["event_name3"],
             "event_columns": [
                 "domain_userid",
                 "app_id"
@@ -45,12 +45,12 @@
             "version": "2"
         },
         {
-            "event_name": "event_name4",
+            "event_names": ["event_name4"],
             "event_columns": [
                 "domain_userid",
                 "app_id"
             ],
-            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
+            "self_describing_event_schemas": ["iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1"],
             "context_schemas":[
                 "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
                 "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0"
@@ -60,12 +60,12 @@
             "version": "9"
         },
         {
-            "event_name": "event_name1",
+            "event_names": ["event_name1"],
             "event_columns": [
                 "domain_userid",
                 "app_id"
             ],
-            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1"
+            "self_describing_event_schemas": ["iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1"]
         }
     ],
     "users":{

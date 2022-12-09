@@ -14,22 +14,24 @@
     }
 ) }}
 
-{%- set event_name = "event_name1" -%}
+{%- set event_names = ['event_name1'] -%}
 {%- set flat_cols = ['app_id', 'domain_userid'] -%}
-{%- set sde_col = "UNSTRUCT_EVENT_COM_SNOWPLOWANALYTICS_SNOWPLOW_LINK_CLICK_1_0_1" -%}
-{%- set sde_keys = ['elementId', 'elementClasses', 'elementTarget', 'targetUrl', 'elementContent'] -%}
-{%- set sde_types = ['string', 'array', 'string', 'string', 'string'] -%}
+{%- set sde_cols = ['UNSTRUCT_EVENT_COM_SNOWPLOWANALYTICS_SNOWPLOW_LINK_CLICK_1_0_1'] -%}
+{%- set sde_keys = [['elementId', 'elementClasses', 'elementTarget', 'targetUrl', 'elementContent']] -%}
+{%- set sde_types = [['string', 'array', 'string', 'string', 'string']] -%}
+{%- set sde_aliases = [] -%}
 {%- set context_cols = [] -%}
 {%- set context_keys = [] -%}
 {%- set context_types = [] -%}
 {%- set context_alias = [] -%}
 
 {{ snowplow_normalize.normalize_events(
-    event_name,
+    event_names,
     flat_cols,
-    sde_col,
+    sde_cols,
     sde_keys,
     sde_types,
+    sde_aliases,
     context_cols,
     context_keys,
     context_types,
