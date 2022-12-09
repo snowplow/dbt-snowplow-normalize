@@ -106,5 +106,13 @@ jobs:
           dbt deps
         if: ${{matrix.warehouse == 'spark'}}
 
+      - name: "Pre-test: Drop ci schemas"
+        run: |
+          dbt run-operation post_ci_cleanup --target ${{ matrix.warehouse }}
+
       - name: Run tests
         run: ./.scripts/integration_test.sh -d ${{ matrix.warehouse }}
+
+      - name: "Post-test: Drop ci schemas"
+        run: |
+          dbt run-operation post_ci_cleanup --target ${{ matrix.warehouse }}

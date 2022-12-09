@@ -19,3 +19,35 @@ clean-targets:
 quoting:
   identifier: false
   schema: false
+
+vars:
+  snowplow_normalize:
+    snowplow__events: "{{ ref('snowplow_normalize_stg') }}"
+    snowplow__start_date: "2022-10-01"
+    snowplow__backfill_limit_days: 2
+    snowplow__derived_tstamp_partitioned: false
+
+seeds:
+  quote_columns: false
+  snowplow_normalize_integration_tests:
+    +schema: "int_data"
+    source:
+      snowplow_norm_dummy_events:
+        +column_types:
+          event_name: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          event_id: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          app_id:  "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          collector_tstamp: timestamp
+          dvce_sent_tstamp: timestamp
+          dvce_created_tstamp: timestamp
+          unstruct_event_test_1_0_0: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          unstruct_event_test_1_0_1: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          unstruct_event_test2_1_0_0: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          unstruct_event_test2_1_0_1: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          contexts_test_1_0_0: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          contexts_test2_1_0_0: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          contexts_test2_1_0_1: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          contexts_test2_1_0_2: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          contexts_test2_1_0_3: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          contexts_test2_1_0_4: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          contexts_test2_1_0_5: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
