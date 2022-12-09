@@ -10,7 +10,7 @@
     },
     "events":[
         {
-            "event_name": "page_view",
+            "event_names": ["page_view"],
             "event_columns": [
                 "domain_userid",
                 "app_id",
@@ -26,13 +26,14 @@
             "version": "1"
         },
         {
-            "event_name": "link_click",
+            "event_names": ["link_click"],
             "event_columns": [
                 "domain_userid",
                 "app_id",
                 "refr_urlpath"
             ],
-            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
+            "self_describing_event_schemas": ["iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1"],
+            "self_describing_event_aliases": ["click"],
             "context_schemas":[
                 "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0"
             ]

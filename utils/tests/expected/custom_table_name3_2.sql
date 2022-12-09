@@ -14,22 +14,24 @@
     }
 ) }}
 
-{%- set event_name = "event_name3" -%}
+{%- set event_names = ['event_name3'] -%}
 {%- set flat_cols = ['app_id', 'domain_userid'] -%}
-{%- set sde_col = "" -%}
+{%- set sde_cols = [] -%}
 {%- set sde_keys = [] -%}
 {%- set sde_types = [] -%}
+{%- set sde_aliases = [] -%}
 {%- set context_cols = ['CONTEXTS_COM_SNOWPLOWANALYTICS_SNOWPLOW_UA_PARSER_CONTEXT_1_0_0', 'CONTEXTS_COM_IAB_SNOWPLOW_SPIDERS_AND_ROBOTS_1_0_0'] -%}
 {%- set context_keys = [['useragentFamily', 'useragentMajor', 'useragentMinor', 'useragentPatch', 'useragentVersion', 'osFamily', 'osMajor', 'osMinor', 'osPatch', 'osPatchMinor', 'osVersion', 'deviceFamily'], ['spiderOrRobot', 'category', 'reason', 'primaryImpact']] -%}
 {%- set context_types = [['string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string'], ['boolean', 'string', 'string', 'string']] -%}
 {%- set context_alias = ['ua', 'spiderbot'] -%}
 
 {{ snowplow_normalize.normalize_events(
-    event_name,
+    event_names,
     flat_cols,
-    sde_col,
+    sde_cols,
     sde_keys,
     sde_types,
+    sde_aliases,
     context_cols,
     context_keys,
     context_types,

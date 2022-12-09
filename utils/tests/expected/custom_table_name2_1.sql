@@ -14,22 +14,24 @@
     }
 ) }}
 
-{%- set event_name = "event_name2" -%}
+{%- set event_names = ['event_name2'] -%}
 {%- set flat_cols = ['app_id', 'domain_userid'] -%}
-{%- set sde_col = "UNSTRUCT_EVENT_COM_SNOWPLOWANALYTICS_SNOWPLOW_LINK_CLICK_1_0_1" -%}
-{%- set sde_keys = ['elementId', 'elementClasses', 'elementTarget', 'targetUrl', 'elementContent'] -%}
-{%- set sde_types = ['string', 'array', 'string', 'string', 'string'] -%}
+{%- set sde_cols = ['UNSTRUCT_EVENT_COM_SNOWPLOWANALYTICS_SNOWPLOW_LINK_CLICK_1_0_1'] -%}
+{%- set sde_keys = [['elementId', 'elementClasses', 'elementTarget', 'targetUrl', 'elementContent']] -%}
+{%- set sde_types = [['string', 'array', 'string', 'string', 'string']] -%}
+{%- set sde_aliases = [] -%}
 {%- set context_cols = ['CONTEXTS_COM_SNOWPLOWANALYTICS_SNOWPLOW_UA_PARSER_CONTEXT_1_0_0', 'CONTEXTS_COM_IAB_SNOWPLOW_SPIDERS_AND_ROBOTS_1_0_0'] -%}
 {%- set context_keys = [['useragentFamily', 'useragentMajor', 'useragentMinor', 'useragentPatch', 'useragentVersion', 'osFamily', 'osMajor', 'osMinor', 'osPatch', 'osPatchMinor', 'osVersion', 'deviceFamily'], ['spiderOrRobot', 'category', 'reason', 'primaryImpact']] -%}
 {%- set context_types = [['string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string'], ['boolean', 'string', 'string', 'string']] -%}
 {%- set context_alias = ['ua_parser_context', 'spiders_and_robots'] -%}
 
 {{ snowplow_normalize.normalize_events(
-    event_name,
+    event_names,
     flat_cols,
-    sde_col,
+    sde_cols,
     sde_keys,
     sde_types,
+    sde_aliases,
     context_cols,
     context_keys,
     context_types,
