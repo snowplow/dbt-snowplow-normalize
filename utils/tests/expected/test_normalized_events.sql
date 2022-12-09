@@ -20,12 +20,12 @@ select
     {% if target.type in ['databricks', 'spark'] -%}
     , DATE(collector_tstamp) as collector_tstamp_date
     {%- endif %}
-    , 'event_name1' as event_name
+    , event_name
     , 'itsaprefix_event_name1_1' as event_table_name
 from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
-    event_name = 'event_name1'
+    event_name in ('event_name1')
     and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
 
 UNION ALL
@@ -36,12 +36,12 @@ select
     {% if target.type in ['databricks', 'spark'] -%}
     , DATE(collector_tstamp) as collector_tstamp_date
     {%- endif %}
-    , 'event_name2' as event_name
+    , event_name
     , 'custom_table_name2_1' as event_table_name
 from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
-    event_name = 'event_name2'
+    event_name in ('event_name2')
     and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
 
 UNION ALL
@@ -52,12 +52,12 @@ select
     {% if target.type in ['databricks', 'spark'] -%}
     , DATE(collector_tstamp) as collector_tstamp_date
     {%- endif %}
-    , 'event_name3' as event_name
+    , event_name
     , 'custom_table_name3_2' as event_table_name
 from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
-    event_name = 'event_name3'
+    event_name in ('event_name3')
     and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
 
 UNION ALL
@@ -68,10 +68,42 @@ select
     {% if target.type in ['databricks', 'spark'] -%}
     , DATE(collector_tstamp) as collector_tstamp_date
     {%- endif %}
-    , 'event_name4' as event_name
+    , event_name
     , 'custom_table_name4_1' as event_table_name
 from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
-    event_name = 'event_name4'
+    event_name in ('event_name4')
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+
+UNION ALL
+
+select
+    event_id
+    , collector_tstamp
+    {% if target.type in ['databricks', 'spark'] -%}
+    , DATE(collector_tstamp) as collector_tstamp_date
+    {%- endif %}
+    , event_name
+    , 'custom_table_name5_9' as event_table_name
+from
+    {{ ref('snowplow_normalize_base_events_this_run') }}
+where
+    event_name in ('event_name5','event_name6')
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+
+UNION ALL
+
+select
+    event_id
+    , collector_tstamp
+    {% if target.type in ['databricks', 'spark'] -%}
+    , DATE(collector_tstamp) as collector_tstamp_date
+    {%- endif %}
+    , event_name
+    , 'custom_table_name6_6' as event_table_name
+from
+    {{ ref('snowplow_normalize_base_events_this_run') }}
+where
+    event_name in ('event_name7','event_name8')
     and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}

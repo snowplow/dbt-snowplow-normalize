@@ -31,9 +31,10 @@ def test_url_to_column(test_input, expected):
     assert url_to_column(test_input) == expected
 
 @pytest.mark.parametrize("test_input_events,test_input_urls,test_input_versions,test_input_tables,test_prefix,expected", [
-    (['event1', 'event2', 'event3'], [None, None, None], [None, '5', '9'], [None, None, None], 'itsaprefix', ['itsaprefix_event1_1', 'itsaprefix_event2_5', 'itsaprefix_event3_9']),
-    (['event1', 'event2', 'event3'], ['iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', 'iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0', 'iglu:com.snowplowanalytics.snowplow/site_search/jsonschema/1-0-0'], ['5', '2', '9'], [None, None, None], 'itsaprefix', ['itsaprefix_event1_1', 'itsaprefix_event2_1', 'itsaprefix_event3_1']),
-    (['event1', 'event2', 'event3'], ['iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', None, 'iglu:com.snowplowanalytics.snowplow/site_search/jsonschema/1-0-0'], ['5', '2', '9'], ['name1', 'name2', 'name3'], 'itsaprefix', ['name1_1', 'name2_2', 'name3_1'])
+    ([['event1'], ['event2'], ['event3']], [None, None, None], [None, '5', '9'], [None, None, None], 'itsaprefix', ['itsaprefix_event1_1', 'itsaprefix_event2_5', 'itsaprefix_event3_9']),
+    ([['event1'], ['event2'], ['event3']], [['iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1'], ['iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0'], ['iglu:com.snowplowanalytics.snowplow/site_search/jsonschema/1-0-0']], ['5', '2', '9'], [None, None, None], 'itsaprefix', ['itsaprefix_event1_1', 'itsaprefix_event2_1', 'itsaprefix_event3_1']),
+    ([['event1'], ['event2'], ['event3']], [['iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1'], None, ['iglu:com.snowplowanalytics.snowplow/site_search/jsonschema/1-0-0']], ['5', '2', '9'], ['name1', 'name2', 'name3'], 'itsaprefix', ['name1_1', 'name2_2', 'name3_1']),
+    ([['event1', 'event4'], ['event2'], ['event3']], [['iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1', 'iglu:com.snowplowanalytics.snowplow/deeplink_click/jsonschema/1-0-4'], None, ['iglu:com.snowplowanalytics.snowplow/site_search/jsonschema/1-0-0']], ['5', '2', '9'], ['name1', 'name2', 'name3'], 'itsaprefix', ['name1_5', 'name2_2', 'name3_1'])
     ])
 def test_generate_names(test_input_events, test_input_urls, test_input_versions, test_input_tables, test_prefix, expected):
     assert generate_names(test_input_events, test_input_urls, test_input_versions, test_input_tables, test_prefix) == expected
@@ -257,7 +258,7 @@ class Test_cleanup_models:
 
             # table_name provided models
             elif i >= 5 and i < 10:
-                event_names.append('Does not matter ' + str(i))
+                event_names.append(['Does not matter ' + str(i)])
                 sde_urls.append(None)
                 versions.append(None)
                 table_names.append(name)
@@ -268,8 +269,8 @@ class Test_cleanup_models:
 
             # event_name models, with sdes
             elif i >= 10 and i < 15:
-                event_names.append(name)
-                sde_urls.append(sde_urls_fixed[i - 10])
+                event_names.append([name])
+                sde_urls.append([sde_urls_fixed[i - 10]])
                 versions.append(sde_url_versions[i - 10])
                 table_names.append(None)
                 filename = os.path.join('models', model_folder, name + '_' + sde_url_versions[i - 10] + '.sql')
@@ -279,7 +280,7 @@ class Test_cleanup_models:
 
             # event_name models, no sde, version provided
             elif i >= 15 and i < 20:
-                event_names.append(name)
+                event_names.append([name])
                 sde_urls.append(None)
                 versions.append(versions_fixed[i - 15])
                 table_names.append(None)
@@ -290,7 +291,7 @@ class Test_cleanup_models:
 
             # event name models, no sde, no version provided
             elif i >= 20 and i < 25:
-                event_names.append(name)
+                event_names.append([name])
                 sde_urls.append(None)
                 versions.append(None)
                 table_names.append(None)
@@ -301,7 +302,7 @@ class Test_cleanup_models:
 
             # extra models in config that don't exist on sysmte
             elif i >= 25 and i < 40:
-                event_names.append('Does not matter' + str(i))
+                event_names.append(['Does not matter' + str(i)])
                 sde_urls.append(None)
                 versions.append(None)
                 table_names.append(name)
@@ -597,7 +598,7 @@ class Test_model_output:
 
         assert compare(output, expected)
 
-    def test_decomposed(self, setup_teardown):
+    def test_normalized(self, setup_teardown):
         with open(os.path.join('models', setup_teardown, 'test_normalized_events.sql')) as file:
             output = file.read()
 
@@ -633,11 +634,29 @@ class Test_model_output:
 
         assert compare(output, expected)
 
-    def test_full(self, setup_teardown):
+    def test_full_single(self, setup_teardown):
         with open(os.path.join('models', setup_teardown, 'custom_table_name4_1.sql')) as file:
             output = file.read()
 
         with open(os.path.join('utils', 'tests', 'expected', 'custom_table_name4_1.sql')) as file:
+            expected = file.read()
+
+        assert compare(output, expected)
+
+    def test_multi(self, setup_teardown):
+        with open(os.path.join('models', setup_teardown, 'custom_table_name5_9.sql')) as file:
+            output = file.read()
+
+        with open(os.path.join('utils', 'tests', 'expected', 'custom_table_name5_9.sql')) as file:
+            expected = file.read()
+
+        assert compare(output, expected)
+
+    def test_full_multi(self, setup_teardown):
+        with open(os.path.join('models', setup_teardown, 'custom_table_name6_6.sql')) as file:
+            output = file.read()
+
+        with open(os.path.join('utils', 'tests', 'expected', 'custom_table_name6_6.sql')) as file:
             expected = file.read()
 
         assert compare(output, expected)

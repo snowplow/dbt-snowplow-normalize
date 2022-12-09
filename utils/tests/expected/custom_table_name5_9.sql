@@ -14,12 +14,12 @@
     }
 ) }}
 
-{%- set event_names = ['event_name4'] -%}
+{%- set event_names = ['event_name5', 'event_name6'] -%}
 {%- set flat_cols = ['app_id', 'domain_userid'] -%}
-{%- set sde_cols = ['UNSTRUCT_EVENT_COM_SNOWPLOWANALYTICS_SNOWPLOW_LINK_CLICK_1_0_1'] -%}
-{%- set sde_keys = [['elementId', 'elementClasses', 'elementTarget', 'targetUrl', 'elementContent']] -%}
-{%- set sde_types = [['string', 'array', 'string', 'string', 'string']] -%}
-{%- set sde_aliases = [] -%}
+{%- set sde_cols = ['UNSTRUCT_EVENT_COM_SNOWPLOWANALYTICS_SNOWPLOW_LINK_CLICK_1_0_1', 'UNSTRUCT_EVENT_COM_SNOWPLOWANALYTICS_MOBILE_DEEP_LINK_1_0_0'] -%}
+{%- set sde_keys = [['elementId', 'elementClasses', 'elementTarget', 'targetUrl', 'elementContent'], ['url', 'referrer']] -%}
+{%- set sde_types = [['string', 'array', 'string', 'string', 'string'], ['string', 'string']] -%}
+{%- set sde_aliases = ['link_click', 'deep_link'] -%}
 {%- set context_cols = ['CONTEXTS_COM_SNOWPLOWANALYTICS_SNOWPLOW_UA_PARSER_CONTEXT_1_0_0', 'CONTEXTS_COM_IAB_SNOWPLOW_SPIDERS_AND_ROBOTS_1_0_0', 'CONTEXTS_NL_BASJES_YAUAA_CONTEXT_1_0_1'] -%}
 {%- set context_keys = [['useragentFamily', 'useragentMajor', 'useragentMinor', 'useragentPatch', 'useragentVersion', 'osFamily', 'osMajor', 'osMinor', 'osPatch', 'osPatchMinor', 'osVersion', 'deviceFamily'], ['spiderOrRobot', 'category', 'reason', 'primaryImpact'], ['deviceClass', 'deviceName', 'deviceBrand', 'deviceCpu', 'deviceCpuBits', 'deviceFirmwareVersion', 'deviceVersion', 'operatingSystemClass', 'operatingSystemName', 'operatingSystemVersion', 'operatingSystemNameVersion', 'operatingSystemVersionBuild', 'layoutEngineClass', 'layoutEngineName', 'layoutEngineVersion', 'layoutEngineVersionMajor', 'layoutEngineNameVersion', 'layoutEngineNameVersionMajor', 'layoutEngineBuild', 'agentClass', 'agentName', 'agentVersion', 'agentVersionMajor', 'agentNameVersion', 'agentNameVersionMajor', 'agentBuild', 'agentLanguage', 'agentLanguageCode', 'agentInformationEmail', 'agentInformationUrl', 'agentSecurity', 'agentUuid', 'webviewAppName', 'webviewAppVersion', 'webviewAppVersionMajor', 'webviewAppNameVersionMajor', 'facebookCarrier', 'facebookDeviceClass', 'facebookDeviceName', 'facebookDeviceVersion', 'facebookFBOP', 'facebookFBSS', 'facebookOperatingSystemName', 'facebookOperatingSystemVersion', 'anonymized', 'hackerAttackVector', 'hackerToolkit', 'koboAffiliate', 'koboPlatformId', 'iECompatibilityVersion', 'iECompatibilityVersionMajor', 'iECompatibilityNameVersion', 'iECompatibilityNameVersionMajor', 'carrier', 'gSAInstallationID', 'networkType', 'operatingSystemNameVersionMajor', 'operatingSystemVersionMajor']] -%}
 {%- set context_types = [['string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string'], ['boolean', 'string', 'string', 'string'], ['string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string']] -%}

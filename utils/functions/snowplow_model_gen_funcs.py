@@ -164,8 +164,8 @@ def generate_names(event_names: list, sde_urls: list, versions: list, table_name
     """Generate all event based model names from the values provided in the config file
 
     Args:
-        event_names (list): List of event names from config file
-        sde_urls (list): List of SDE uls from the config file
+        event_names (list): List of lists of event names from config file
+        sde_urls (list): List of lists of SDE uls from the config file
         versions (list): List of versions from the config file
         table_names (list): List of explicit table names from the config file
         prefix (string): String to prefix table names with from the config file
@@ -174,8 +174,9 @@ def generate_names(event_names: list, sde_urls: list, versions: list, table_name
         list: List of all model names that will be generated from events in the config file. Does not include the filtered table or users table.
     """
     verboseprint('Generating table names...')
-    sde_major_versions = [sde_url.split('-')[0][-1] if sde_url is not None else version if version is not None else '1' for sde_url, version in zip(sde_urls, versions)]
-    model_names = [event_name + '_' + sde_major_version if table_name is None else table_name + '_' + sde_major_version
+    # In the case of multiple sdes/event names, they will have provided a version and table name, so safe to always get the first element
+    sde_major_versions = [sde_url[0].split('-')[0][-1] if sde_url is not None and len(sde_url) == 1 else version if version is not None else '1' for sde_url, version in zip(sde_urls, versions)]
+    model_names = [event_name[0] + '_' + sde_major_version if table_name is None else table_name + '_' + sde_major_version
                             for event_name, sde_major_version, table_name in zip(event_names, sde_major_versions, table_names)]
     if prefix != '':
         model_names = [prefix + '_' + name if custom_name is None else name for name, custom_name in zip(model_names, table_names)]
@@ -187,8 +188,8 @@ def cleanup_models(event_names: list, sde_urls: list, versions: list, table_name
     """Clean up excess models not present in your config file and quit
 
     Args:
-        event_names (list): List of event names from your config
-        sde_urls (list): List of self describing event urls from your config
+        event_names (list): List of lists of event names from config
+        sde_urls (list): List of lists of self describing event urls from your config
         versions (list): List of versions from your config
         table_names (list): List of tables names from your config
         models_prefix (string): String for the prefix to non custom-named tables, from your config
@@ -232,6 +233,45 @@ def parse_args(args: list):
     parser.add_argument('--cleanUp', dest = 'cleanUp', action = 'store_true', default = False, help = 'delete any models not present in your config and exit (no models will be generated)')
     return parser.parse_args(args)
 
+def get_cols_keys_types_aliases(urls: list, aliases: list, prefix: str, schemas_list: dict, repo_keys: dict, validate_schemas: bool) -> tuple:
+    """Get the columns, keys, types, and aliases for the sdes or contexts
+
+    Args:
+        urls (list): List of iglu: type urls for the events/contexts
+        aliases (list): List of aliases for the columns to be prefixed by
+        prefix (str): Prefix for the column names to read from
+        schemas_list (dict): Dictionary of schemas to use in validate_json
+        repo_keys (dict): Dictionmary of registry keys to use in validate_json
+        validate_schemas (bool): Boolean to validate the jsons or not
+
+    Raises:
+        ValueError: If schemas do not validate against their schemas
+
+    Returns:
+        tuple: The columns (list), keys (list of lists), types (list of lists), and aliases (list) of the urls passed as inputs
+    """
+
+    if urls is not None:
+        # Parse the input URL then get parse and validate schemas for sde
+        url_cut = [urlparse(url).path for url in urls]
+        jsons = [get_schema(parse_schema_url(url, schemas_list, repo_keys), repo_keys) for url in urls]
+        for i, sde_json in enumerate(jsons):
+            if not validate_json(sde_json, validate = validate_schemas, schemas_list = schemas_list, repo_keys = repo_keys):
+                raise ValueError(f'Validation of schema {urls[i]} failed.')
+        # Generate final form data for insert into model
+        cols = [prefix + url_to_column(url) for url in url_cut]
+        keys = [list(sde.get('properties').keys()) for sde in jsons]
+        types = [get_types(sde) for sde in jsons]
+        if aliases is None and len(urls) > 1:
+            aliases = [event.get('self').get('name') for event in jsons]
+    else:
+        cols = None
+        keys = None
+        types = None
+
+    return (cols, keys, types, aliases)
+
+
 # Lookups
 schema_cache = {}
 schemas_list = {}
@@ -251,7 +291,7 @@ type_hierarchy = {
 # Hard coded default resolver and schemas to use before we have checked the resolver is valid
 default_resolver = {"schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1", "data": {"cacheSize": 500, "repositories": [{"name": "Iglu Central", "priority": 0, "vendorPrefixes": [ "com.snowplowanalytics" ], "connection": {"http": {"uri": "http://iglucentral.com"}}}]}}
 resolver_schema = {"description":"Schema for an Iglu resolver\'s configuration","properties":{"cacheSize":{"type":"number"},"cacheTtl":{"type":["integer","null"],"minimum":0},"repositories":{"type":"array","items":{"type":"object","properties":{"name":{"type":"string"},"priority":{"type":"number"},"vendorPrefixes":{"type":"array","items":{"type":"string"}},"connection":{"type":"object","oneOf":[{"properties":{"embedded":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"],"additionalProperties":False}},"required":["embedded"],"additionalProperties":False},{"properties":{"http":{"type":"object","properties":{"uri":{"type":"string","format":"uri"},"apikey":{"type":["string","null"]}},"required":["uri"],"additionalProperties":False}},"required":["http"],"additionalProperties":False}]}},"required":["name","priority","vendorPrefixes","connection"],"additionalProperties":False}}},"additionalProperties":False,"type":"object","required":["cacheSize","repositories"],"self":{"vendor":"com.snowplowanalytics.iglu","name":"resolver-config","format":"jsonschema","version":"1-0-3"}}
-config_schema = {"description": "Schema for the Snowplow dbt normalize python script configuration", "self": { "name": "normalize-config", "format": "jsonschema", "version": "1-1-0" }, "properties": { "config": { "type": "object", "properties": { "resolver_file_path": { "type": "string" }, "filtered_events_table_name": { "type": "string" }, "users_table_name": { "type": "string" }, "validate_schemas": { "type": "boolean" }, "overwrite": { "type": "boolean" }, "models_folder": { "type": "string" }, "models_prefix": { "type": "string" } }, "required": [ "resolver_file_path" ], "additionalProperties": False }, "events": { "type": "array", "items": { "type": "object", "properties": { "event_name": { "type": "string" }, "event_columns": { "type": "array", "items": { "type": "string" } }, "self_describing_event_schema": { "type": "string" }, "context_schemas": { "type": "array", "items": { "type": "string" } }, "context_aliases": { "type": "array", "items": { "type": "string" } }, "table_name": { "type": "string" }, "version": { "type": "string", "minLength": 1, "maxLength": 1 } }, "anyOf": [ { "required": [ "event_name", "self_describing_event_schema" ] }, { "required": [ "event_name", "context_schemas" ] }, { "required": [ "event_name", "event_columns" ] } ], "additionalProperties": False }, "minItems": 1 }, "users": { "type": "object", "properties": { "user_id": { "type": "object", "properties": { "id_column": { "type": "string" }, "id_self_describing_event_schema": { "type": "string" }, "id_context_schema": { "type": "string" } }, "additionalProperties": False }, "user_contexts": { "type": "array", "items": { "type": "string" } } }, "required": [ "user_contexts" ], "additionalProperties": False } }, "additionalProperties": False, "type": "object", "required": [ "config", "events" ] }
+config_schema = {"description": "Schema for the Snowplow dbt normalize python script configuration", "self": { "name": "normalize-config", "format": "jsonschema", "version": "2-0-0" }, "properties": { "config": { "type": "object", "properties": { "resolver_file_path": { "type": "string" }, "filtered_events_table_name": { "type": "string" }, "users_table_name": { "type": "string" }, "validate_schemas": { "type": "boolean" }, "overwrite": { "type": "boolean" }, "models_folder": { "type": "string" }, "models_prefix": { "type": "string" } }, "required": [ "resolver_file_path" ], "additionalProperties": False }, "events": { "type": "array", "items": { "type": "object", "properties": { "event_names": { "type": "array", "items": { "type": "string", "minItems": 1 } }, "event_columns": { "type": "array", "items": { "type": "string" } }, "self_describing_event_schemas": { "type": "array", "items": { "type": "string" } }, "self_describing_event_aliases": { "type": "array", "items": { "type": "string" } }, "context_schemas": { "type": "array", "items": { "type": "string" } }, "context_aliases": { "type": "array", "items": { "type": "string" } }, "table_name": { "type": "string" }, "version": { "type": "string", "minLength": 1, "maxLength": 1 } }, "if": { "properties": { "event_names": { "minItems": 2 } } }, "then": { "anyOf": [ { "required": [ "event_names", "self_describing_event_schemas", "version", "table_name" ] }, { "required": [ "event_names", "context_schemas", "version", "table_name" ] }, { "required": [ "event_names", "event_columns", "version", "table_name" ] } ] }, "else": { "anyOf": [ { "required": [ "event_names", "self_describing_event_schemas" ] }, { "required": [ "event_names", "context_schemas" ] }, { "required": [ "event_names", "event_columns" ] } ] }, "additionalProperties": False }, "minItems": 1 }, "users": { "type": "object", "properties": { "user_id": { "type": "object", "properties": { "id_column": { "type": "string" }, "id_self_describing_event_schema": { "type": "string" }, "id_context_schema": { "type": "string" } }, "additionalProperties": False }, "user_contexts": { "type": "array", "items": { "type": "string" } } }, "required": [ "user_contexts" ], "additionalProperties": False } }, "additionalProperties": False, "type": "object", "required": [ "config", "events" ] }
 
 config_help = """
 JSON Config file structure:
@@ -267,13 +307,13 @@ JSON Config file structure:
     },
     "events":[
         {
-            "event_name": <required - string: name of the event type, value of the event_name column in your warehouse>,
+            "event_names": <required - array: name(s) of the event type(s), value of the event_name column in your warehouse>,
             "event_columns": <optional (>=1 of) - array: array of strings of flat column names from the events table to include to include in the model>,
-            "self_describing_event_schema": <optional (>=1 of) - string: `iglu:com.` type url for the self-describing event to include in the model>,
+            "self_describing_event_schemas": <optional (>=1 of) - array: `iglu:com.` type url(s) for the self-describing event(s) to include in the model>,
             "context_schemas": <optional (>=1 of) - array: array of strings of `iglu:com.` type url(s) for the context/entities to include in the model>,
             "context_aliases": <optional - array: array of strings of prefixes to the column alias for context/entities>,
-            "table_name": <optional - string: name of the model, default is the event_name>,
-            "version": <optional - string (length 1): version number to append to table name, if self_describing_event_schema is provided uses major version number from that, default 1>
+            "table_name": <optional if only 1 event name, otherwise required - string: name of the model, default is the event_name>,
+            "version": <optional if only 1 event name, otherwise required - string (length 1): version number to append to table name, if (one) self_describing_event_schema is provided uses major version number from that, default 1>
         },
         {
             ...
