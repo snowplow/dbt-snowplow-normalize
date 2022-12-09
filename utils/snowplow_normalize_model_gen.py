@@ -40,6 +40,7 @@ if not validate_json(config, schema = config_schema, validate = True):
 filtered_events_table_name = config.get('config').get('filtered_events_table_name')
 event_names = []
 sde_urls = []
+sde_aliases = []
 context_urls = []
 flat_cols = []
 context_aliases = []
@@ -47,8 +48,9 @@ table_names = []
 versions = []
 for event in config.get('events'):
     # Importantly, append None if it isn't provided
-    event_names.append(event.get('event_name'))
-    sde_urls.append(event.get('self_describing_event_schema'))
+    event_names.append(event.get('event_names'))
+    sde_urls.append(event.get('self_describing_event_schemas'))
+    sde_aliases.append(event.get('self_describing_event_aliases'))
     context_urls.append(event.get('context_schemas'))
     flat_cols.append(event.get('event_columns'))
     context_aliases.append(event.get('context_aliases'))
@@ -145,7 +147,7 @@ for i in range(len(event_names)):
     sde_url = sde_urls[i]
     version = versions[i]
     table_name = table_names[i]
-    sde_major_version = sde_url.split('-')[0][-1] if sde_url is not None else version if version is not None else '1'
+    # In the case of multiple sdes/event names, they will have provided a version, so safe to always get the first element
     model_name = model_names[i]
     filename = os.path.join('models', models_folder,  model_name + '.sql')
 
@@ -155,45 +157,17 @@ for i in range(len(event_names)):
         next
 
     # Continue to generate model
-    verboseprint(f'Generating model {event_name}')
+    verboseprint(f'Generating model for event(s) {event_name}')
     context_url = context_urls[i]
     flat_col = flat_cols[i]
     # Remove columns already included
     flat_col = sorted(list(set(flat_col).difference({'event_id', 'collector_tstamp'})))
     context_alias = context_aliases[i]
+    sde_alias = sde_aliases[i]
 
-    if sde_url is not None:
-        # Parse the input URL then get parse and validate schemas for sde
-        sde_url_cut = urlparse(sde_url).path
-        sde_json = get_schema(parse_schema_url(sde_url, schemas_list, repo_keys), repo_keys)
-        if not validate_json(sde_json, validate = validate_schemas, schemas_list = schemas_list, repo_keys = repo_keys):
-            raise ValueError(f'Validation of schema {sde_url} failed.')
-        # Generate final form data for insert into model
-        sde_col = 'UNSTRUCT_EVENT_' + url_to_column(sde_url_cut)
-        sde_keys = list(sde_json.get('properties').keys())
-        sde_types = get_types(sde_json)
-    else:
-        sde_col = None
-        sde_keys = None
-        sde_types = None
+    sde_cols, sde_keys, sde_types, sde_alias = get_cols_keys_types_aliases(sde_url, sde_alias, 'UNSTRUCT_EVENT_', schemas_list, repo_keys, validate_schemas)
+    context_cols, context_keys, context_types, context_alias = get_cols_keys_types_aliases(context_url, context_alias, 'CONTEXTS_', schemas_list, repo_keys, validate_schemas)
 
-    if context_url is not None:
-        # Parse the input URL then get parse and validate schemas for contexts
-        context_url_cut = [urlparse(url).path for url in context_url]
-        context_jsons = [get_schema(parse_schema_url(url, schemas_list, repo_keys), repo_keys) for url in context_url]
-        for i, context_json in enumerate(context_jsons):
-            if not validate_json(context_json, validate = validate_schemas, schemas_list = schemas_list, repo_keys = repo_keys):
-                raise ValueError(f'Validation of schema {context_url[i]} failed.')
-        # Generate final form data for insert into model
-        context_cols = ['CONTEXTS_' + url_to_column(url) for url in context_url_cut]
-        context_keys = [list(context.get('properties').keys()) for context in context_jsons]
-        context_types = [get_types(context) for context in context_jsons]
-        if context_alias is None:
-            context_alias = [context.get('self').get('name') for context in context_jsons]
-    else:
-        context_cols = None
-        context_keys = None
-        context_types = None
 
     # Write model string
     model_content = f"""{{{{ config(
@@ -212,22 +186,24 @@ for i in range(len(event_names)):
     }}
 ) }}}}
 
-{{%- set event_name = "{event_name}" -%}}
+{{%- set event_names = {event_name} -%}}
 {{%- set flat_cols = {flat_col or []} -%}}
-{{%- set sde_col = "{sde_col or ""}" -%}}
+{{%- set sde_cols = {sde_cols or []} -%}}
 {{%- set sde_keys = {sde_keys or []} -%}}
 {{%- set sde_types = {sde_types or []} -%}}
+{{%- set sde_aliases = {sde_alias or []} -%}}
 {{%- set context_cols = {context_cols or []} -%}}
 {{%- set context_keys = {context_keys or []} -%}}
 {{%- set context_types = {context_types or []} -%}}
 {{%- set context_alias = {context_alias or []} -%}}
 
 {{{{ snowplow_normalize.normalize_events(
-    event_name,
+    event_names,
     flat_cols,
-    sde_col,
+    sde_cols,
     sde_keys,
     sde_types,
+    sde_aliases,
     context_cols,
     context_keys,
     context_types,
@@ -275,12 +251,12 @@ select
     {{% if target.type in ['databricks', 'spark'] -%}}
     , DATE(collector_tstamp) as collector_tstamp_date
     {{%- endif %}}
-    , '{event_name}' as event_name
+    , event_name
     , '{model}' as event_table_name
 from
     {{{{ ref('snowplow_normalize_base_events_this_run') }}}}
 where
-    event_name = '{event_name}'
+    event_name in ('{"','".join(event_name)}')
     and {{{{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}}}
         """
         if n != n_models -1:

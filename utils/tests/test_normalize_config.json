@@ -10,20 +10,20 @@
     },
     "events":[
         {
-            "event_name": "event_name1",
+            "event_names": ["event_name1"],
             "event_columns": [
                 "domain_userid",
                 "app_id"
             ],
-            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1"
+            "self_describing_event_schemas": ["iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1"]
         },
         {
-            "event_name": "event_name2",
+            "event_names": ["event_name2"],
             "event_columns": [
                 "domain_userid",
                 "app_id"
             ],
-            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
+            "self_describing_event_schemas": ["iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1"],
             "context_schemas":[
                 "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
                 "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0"
@@ -32,7 +32,7 @@
             "version": "2"
         },
         {
-            "event_name": "event_name3",
+            "event_names": ["event_name3"],
             "event_columns": [
                 "domain_userid",
                 "app_id",
@@ -47,12 +47,12 @@
             "version": "2"
         },
         {
-            "event_name": "event_name4",
+            "event_names": ["event_name4"],
             "event_columns": [
                 "domain_userid",
                 "app_id"
             ],
-            "self_describing_event_schema": "iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
+            "self_describing_event_schemas": ["iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1"],
             "context_schemas":[
                 "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
                 "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0",
@@ -61,6 +61,41 @@
             "context_aliases": ["ua", "spiderbot", "yauaa"],
             "table_name": "custom_table_name4",
             "version": "9"
+        },
+        {
+            "event_names": ["event_name5", "event_name6"],
+            "event_columns": [
+                "domain_userid",
+                "app_id"
+            ],
+            "self_describing_event_schemas": ["iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
+                                                "iglu:com.snowplowanalytics.mobile/deep_link/jsonschema/1-0-0"],
+            "context_schemas":[
+                "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
+                "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0",
+                "iglu:nl.basjes/yauaa_context/jsonschema/1-0-1"
+            ],
+            "context_aliases": ["ua", "spiderbot", "yauaa"],
+            "table_name": "custom_table_name5",
+            "version": "9"
+        },
+        {
+            "event_names": ["event_name7", "event_name8"],
+            "event_columns": [
+                "domain_userid",
+                "app_id"
+            ],
+            "self_describing_event_schemas": ["iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
+                                                "iglu:com.snowplowanalytics.mobile/deep_link/jsonschema/1-0-0"],
+            "self_describing_event_aliases":["click", "deep"],
+            "context_schemas":[
+                "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
+                "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0",
+                "iglu:nl.basjes/yauaa_context/jsonschema/1-0-1"
+            ],
+            "context_aliases": ["ua", "spiderbot", "yauaa"],
+            "table_name": "custom_table_name6",
+            "version": "6"
         }
     ],
     "users":{
