@@ -58,6 +58,16 @@ where
 
 
 {% macro bigquery__normalize_events(event_names, flat_cols, sde_cols, sde_keys, sde_types, sde_aliases, context_cols, context_keys, context_types, context_aliases, remove_new_event_check) %}
+{# Remove down to major version for bigquery combine columns macro, drop 2 last _X values #}
+{%- set sde_cols_clean = [] -%}
+{%- for ind in range(sde_cols|length) -%}
+    {% do sde_cols_clean.append('_'.join(sde_cols[ind].split('_')[:-2])) -%}
+{%- endfor -%}
+{%- set context_cols_clean = [] -%}
+{%- for ind in range(context_cols|length) -%}
+    {% do context_cols_clean.append('_'.join(context_cols[ind].split('_')[:-2])) -%}
+{%- endfor -%}
+
 {# Replace keys with snake_case where needed #}
 {%- set sde_keys_clean = [] -%}
 {%- set context_keys_clean = [] -%}
@@ -78,6 +88,8 @@ where
     {% do context_keys_clean.append(context_key_clean) -%}
 {%- endfor -%}
 
+
+
 select
     event_id
     , collector_tstamp
@@ -89,25 +101,37 @@ select
     {%- endif -%}
     -- self describing events columns from event table
     {% if sde_cols|length > 0 %}
-    {%- for col, col_ind in zip(sde_cols, range(sde_cols|length)) -%}
-    {%- for key in sde_keys_clean[col_ind] -%}
-    {% if sde_aliases|length > 0 -%}
-    , {{ col }}.{{ key }} as {{ sde_aliases[col_ind] }}_{{ key }}
+    {%- for col, col_ind in zip(sde_cols_clean, range(sde_cols|length)) -%}
+    {%- set sde_col_list = snowplow_utils.combine_column_versions(
+                                relation=ref('snowplow_normalize_base_events_this_run'),
+                                column_prefix=col.lower(),
+                                include_field_alias = False,
+                                required_fields = sde_keys_clean[col_ind]
+                                ) -%}
+    {% for field, key_ind in zip(sde_col_list, range(sde_col_list|length)) %}
+    , {{field}}
+    {% if sde_aliases|length > 0 -%} as {{ sde_aliases[col_ind] }}_{{ sde_keys_clean[col_ind][key_ind] }}
     {% else -%}
-    , {{ col }}.{{ key }} as {{ key }}
-    {% endif -%}
+        as {{ sde_keys_clean[col_ind][key_ind] }}
+    {%- endif -%}
     {%- endfor -%}
     {%- endfor -%}
     {%- endif %}
     -- context column(s) from the event table
     {% if context_cols|length > 0 %}
-    {%- for col, col_ind in zip(context_cols, range(context_cols|length)) -%}
-    {%- for key in context_keys_clean[col_ind] -%}
-    {% if context_aliases|length > 0 -%}
-    , {{ col }}[SAFE_OFFSET(0)].{{ key }} as {{ context_aliases[col_ind] }}_{{ key }}
+    {%- for col, col_ind in zip(context_cols_clean, range(context_cols|length)) -%}
+    {%- set cont_col_list = snowplow_utils.combine_column_versions(
+                                relation=ref('snowplow_normalize_base_events_this_run'),
+                                column_prefix=col.lower(),
+                                include_field_alias = False,
+                                required_fields = context_keys_clean[col_ind]
+                                ) -%}
+    {% for field, key_ind in zip(cont_col_list, range(cont_col_list|length)) %}
+    , {{field}}
+    {% if context_aliases|length > 0 -%} as {{ context_aliases[col_ind] }}_{{ context_keys_clean[col_ind][key_ind] }}
     {% else -%}
-    , {{ col }}[SAFE_OFFSET(0)].{{ key }} as {{ key }}
-    {% endif -%}
+        as {{ context_keys_clean[col_ind][key_ind] }}
+    {%- endif -%}
     {%- endfor -%}
     {%- endfor -%}
     {%- endif %}
