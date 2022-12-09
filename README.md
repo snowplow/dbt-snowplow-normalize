@@ -72,7 +72,7 @@ limitations under the License.
 [dbt-package-docs]: https://docs.getdbt.com/docs/building-a-dbt-project/package-management
 [discourse-image]: https://img.shields.io/discourse/posts?server=https%3A%2F%2Fdiscourse.snowplow.io%2F
 [discourse]: http://discourse.snowplow.io/
-[snowplow-normalize-docs]: https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/dbt-normalize-model
+[snowplow-normalize-docs]: https://docs.snowplow.io/docs/modeling-your-data/modeling-your-data-with-dbt/dbt-models/dbt-normalize-data-model/
 
 [release-image]: https://img.shields.io/github/v/release/snowplow/dbt-snowplow-normalize?sort=semver
 [releases]: https://github.com/snowplow/dbt-snowplow-normalize/releases
