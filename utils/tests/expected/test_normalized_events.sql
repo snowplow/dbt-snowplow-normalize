@@ -1,7 +1,7 @@
 {{ config(
     tags = "snowplow_normalize_incremental",
     materialized = var("snowplow__incremental_materialization", "snowplow_incremental"),
-    unique_key = "event_id",
+    unique_key = "unique_id",
     upsert_date_key = "collector_tstamp",
     partition_by = snowplow_utils.get_partition_by(bigquery_partition_by={
       "field": "collector_tstamp",
@@ -22,6 +22,7 @@ select
     {%- endif %}
     , event_name
     , 'itsaprefix_event_name1_1' as event_table_name
+    , event_id||'-'||'itsaprefix_event_name1_1' as unique_id
 from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
@@ -38,6 +39,7 @@ select
     {%- endif %}
     , event_name
     , 'custom_table_name2_1' as event_table_name
+    , event_id||'-'||'custom_table_name2_1' as unique_id
 from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
@@ -54,6 +56,7 @@ select
     {%- endif %}
     , event_name
     , 'custom_table_name3_2' as event_table_name
+    , event_id||'-'||'custom_table_name3_2' as unique_id
 from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
@@ -70,6 +73,7 @@ select
     {%- endif %}
     , event_name
     , 'custom_table_name4_1' as event_table_name
+    , event_id||'-'||'custom_table_name4_1' as unique_id
 from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
@@ -86,6 +90,7 @@ select
     {%- endif %}
     , event_name
     , 'custom_table_name5_9' as event_table_name
+    , event_id||'-'||'custom_table_name5_9' as unique_id
 from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where
@@ -102,6 +107,7 @@ select
     {%- endif %}
     , event_name
     , 'custom_table_name6_6' as event_table_name
+    , event_id||'-'||'custom_table_name6_6' as unique_id
 from
     {{ ref('snowplow_normalize_base_events_this_run') }}
 where

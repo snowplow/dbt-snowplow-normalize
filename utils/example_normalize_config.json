@@ -10,7 +10,7 @@
     },
     "events":[
         {
-            "event_names": ["page_view"],
+            "event_names": ["page_view", "page_ping"],
             "event_columns": [
                 "domain_userid",
                 "app_id",
@@ -22,7 +22,7 @@
                 "iglu:nl.basjes/yauaa_context/jsonschema/1-0-4"
             ],
             "context_aliases": ["page", "yauaa"],
-            "table_name": "snowplow_page_view_events",
+            "table_name": "snowplow_page_events",
             "version": "1"
         },
         {
