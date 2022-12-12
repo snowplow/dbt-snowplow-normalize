@@ -47,6 +47,19 @@ context_aliases = []
 table_names = []
 versions = []
 for event in config.get('events'):
+    # Check for things you can't in jsonschema i.e. lengths match. Also check aliases only provided if schema is to avoid overly complex schema rules
+    if event.get('self_describing_event_aliases') is not None:
+        if event.get('self_describing_event_schemas') is None:
+            raise ValueError(f"Self describing event aliases provided for event name(s) {event.get('event_names')} with no self describing event schemas")
+        elif len(event.get('self_describing_event_aliases')) != len(event.get('self_describing_event_schemas')):
+            raise ValueError(f"Length of self describing events schemas and aliases does not match for event name(s) {event.get('event_names')}, please provide an alias for each schema.")
+
+    if event.get('context_aliases') is not None:
+        if event.get('context_schemas') is None:
+            raise ValueError(f"Self describing event aliases provided for event name(s) {event.get('event_names')} with no self describing event schemas")
+        elif len(event.get('context_aliases')) != len(event.get('context_schemas')):
+            raise ValueError(f"Length of context schemas and aliases does not match for event name(s) {event.get('event_names')}, please provide an alias for each schema.")
+
     # Importantly, append None if it isn't provided
     event_names.append(event.get('event_names'))
     sde_urls.append(event.get('self_describing_event_schemas'))
@@ -57,11 +70,17 @@ for event in config.get('events'):
     table_names.append(event.get('table_name'))
     versions.append(event.get('version'))
 
+
 # Parse users
 user_urls = config.get('users', {}).get('user_contexts')
 user_id_column = config.get('users', {}).get('user_id', {}).get('id_column') or 'user_id'
 user_id_sde = config.get('users', {}).get('user_id', {}).get('id_self_describing_event_schema')
 user_id_context = config.get('users', {}).get('user_id', {}).get('id_context_schema')
+
+# Raise a warning if both an sde AND a context column are specified
+if user_id_sde is not None and user_id_context is not None:
+    warnings.warn("Both id_self_describing_event_schema and id_context_schema have been provided, only id_self_describing_event_schema will be used.")
+
 if user_id_sde is not None:
     user_id_sde = 'UNSTRUCT_EVENT_' + url_to_column(urlparse(user_id_sde).path)
 else:
@@ -228,7 +247,7 @@ if filtered_events_table_name is not None:
     filtered_model_content = f"""{{{{ config(
     tags = "snowplow_normalize_incremental",
     materialized = var("snowplow__incremental_materialization", "snowplow_incremental"),
-    unique_key = "event_id",
+    unique_key = "unique_id",
     upsert_date_key = "collector_tstamp",
     partition_by = snowplow_utils.get_partition_by(bigquery_partition_by={{
       "field": "collector_tstamp",
@@ -253,6 +272,7 @@ select
     {{%- endif %}}
     , event_name
     , '{model}' as event_table_name
+    , event_id||'-'||'{model}' as unique_id
 from
     {{{{ ref('snowplow_normalize_base_events_this_run') }}}}
 where

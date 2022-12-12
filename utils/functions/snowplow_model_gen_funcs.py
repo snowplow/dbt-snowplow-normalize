@@ -310,6 +310,7 @@ JSON Config file structure:
             "event_names": <required - array: name(s) of the event type(s), value of the event_name column in your warehouse>,
             "event_columns": <optional (>=1 of) - array: array of strings of flat column names from the events table to include to include in the model>,
             "self_describing_event_schemas": <optional (>=1 of) - array: `iglu:com.` type url(s) for the self-describing event(s) to include in the model>,
+            "self_describing_event_aliases": <optional - array: array of strings of prefixes to the column alias for self describing events>,
             "context_schemas": <optional (>=1 of) - array: array of strings of `iglu:com.` type url(s) for the context/entities to include in the model>,
             "context_aliases": <optional - array: array of strings of prefixes to the column alias for context/entities>,
             "table_name": <optional if only 1 event name, otherwise required - string: name of the model, default is the event_name>,
@@ -321,7 +322,7 @@ JSON Config file structure:
     ],
     "users": <optional - if not provided will not generate users model>{
         "user_id": <optional - if not provided will use default user_id field> {
-            "id_column": <required - string: name of column or attribute in the schema that defines your user_id, will be converted to a string in snowflake>,
+            "id_column": <required - string: name of column or attribute in the schema that defines your user_id, will be converted to a string in Snowflake>,
             "id_self_describing_event_schema": <optional - string: `iglu:com.` type url for the self-describing event schema that your user_id column is in, used over id_context_schema if both provided>,
             "id_context_schema": <optional - string: `iglu:com.` type url for the context schema that your user_id column is in>
         },
