@@ -166,7 +166,6 @@ for i in range(len(event_names)):
     sde_url = sde_urls[i]
     version = versions[i]
     table_name = table_names[i]
-    # In the case of multiple sdes/event names, they will have provided a version, so safe to always get the first element
     model_name = model_names[i]
     filename = os.path.join('models', models_folder,  model_name + '.sql')
 
