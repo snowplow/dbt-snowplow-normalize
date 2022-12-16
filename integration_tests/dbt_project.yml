@@ -1,5 +1,5 @@
 name: 'snowplow_normalize_integration_tests'
-version: '0.1.0'
+version: '0.2.0'
 config-version: 2
 
 profile: 'integration_tests'
@@ -23,9 +23,24 @@ quoting:
 vars:
   snowplow_normalize:
     snowplow__events: "{{ ref('snowplow_normalize_stg') }}"
+    snowplow__atomic_schema: "{{ env_var('BIGQUERY_ATOMIC_SCHEMA') }}"
     snowplow__start_date: "2022-10-01"
     snowplow__backfill_limit_days: 2
     snowplow__derived_tstamp_partitioned: false
+
+models:
+  snowplow_normalize_integration_tests:
+    bind: false
+    +schema: "snplw_web_int_tests"
+    dummy_model:
+      bigquery:
+        +enabled: "{{ target.type == 'bigquery' | as_bool() }}"
+      databricks:
+        +enabled: "{{ target.type in ['databricks', 'spark'] | as_bool() }}"
+      default:
+        +enabled: "{{ target.type in ['redshift', 'postgres'] | as_bool() }}"
+      snowflake:
+        +enabled: "{{ target.type == 'snowflake' | as_bool() }}"
 
 seeds:
   quote_columns: false

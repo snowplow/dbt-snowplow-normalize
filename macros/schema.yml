@@ -4,21 +4,24 @@ macros:
   - name: normalize_events
     description: A macro to produce a table from `base_events_this_run` with the input columns, for a single event type
     arguments:
-      - name: event_name
-        type: string
-        description: Name of the event this table will be filtered to
+      - name: event_names
+        type: array
+        description: List of names of the events this table will be filtered to
       - name: flat_cols
         type: array
         description: List of standard columns from the atomic.events table to include
-      - name: sde_col
+      - name: sde_cols
         type: string
-        description: Column name for the self-describing event to pull attributes from
+        description: Column names for the self-describing event to pull attributes from
       - name: sde_keys
         type: array
-        description: List of keys/column names within the self describing event column to include
+        description: List of list of  keys/column names within the self describing event column to include
       - name: sde_types
         type: array
-        description: List of types of the values of the keys within the self describing event column (only used in Snowflake)
+        description: List of list of types of the values of the keys within the self describing event column (only used in Snowflake)
+      - name: sde_aliases
+        type: array
+        description: List of prefixes to apply to the respective context column keys to be used as final column names
       - name: context_cols
         type: array
         description: List of context columns from the atomic.events table to include
@@ -58,3 +61,9 @@ macros:
       - name: remove_new_event_check
         type: boolean
         description: A flag to disable the `with_new_events` part of the macro, to allow for integration tests to run
+  - name: snakeify_case
+    description: Take a string in camel/pascal case and make it snakecase
+    arguments:
+      - name: text
+        type: string
+        description: the text to convert to snakecase
