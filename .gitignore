@@ -184,3 +184,5 @@ cython_debug/
 # End of https://www.toptal.com/developers/gitignore/api/python,dbt,visualstudiocode
 resolver_config.json
 junit/*
+.DS_Store
+dbt-service-account.json
