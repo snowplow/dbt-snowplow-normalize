@@ -1,6 +1,6 @@
 {
     "config":{
-        "resolver_file_path": "default",
+        "resolver_file_path": "utils/tests/invalid_resolver_config.json",
         "filtered_events_table_name":"test_normalized_events",
         "users_table_name":"test_events_users",
         "validate_schemas": true,
@@ -95,20 +95,6 @@
             ],
             "context_aliases": ["ua", "spiderbot", "yauaa"],
             "table_name": "custom_table_name6",
-            "version": "6"
-        },
-        {
-            "event_names": ["event_name9", "event_name10"],
-            "self_describing_event_schemas": ["iglu:com.snowplowanalytics.snowplow/link_click/jsonschema/1-0-1",
-                                                "iglu:com.snowplowanalytics.mobile/deep_link/jsonschema/1-0-0"],
-            "self_describing_event_aliases":["click", "deep"],
-            "context_schemas":[
-                "iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
-                "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0",
-                "iglu:nl.basjes/yauaa_context/jsonschema/1-0-1"
-            ],
-            "context_aliases": ["ua", "spiderbot", "yauaa"],
-            "table_name": "custom_table_name7",
             "version": "6"
         }
     ],
