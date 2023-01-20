@@ -65,7 +65,7 @@ for event in config.get('events'):
     sde_urls.append(event.get('self_describing_event_schemas'))
     sde_aliases.append(event.get('self_describing_event_aliases'))
     context_urls.append(event.get('context_schemas'))
-    flat_cols.append(event.get('event_columns'))
+    flat_cols.append(event.get('event_columns', []))
     context_aliases.append(event.get('context_aliases'))
     table_names.append(event.get('table_name'))
     versions.append(event.get('version'))
@@ -146,12 +146,12 @@ for repo in iglu_resolver_parsed.get('data').get('repositories'):
     repo_netloc = parsed_uri.netloc
     priority.append(repo.get('priority'))
     # Store the api key if it's needed, None if it doesn't exist
-    repo_keys[repo_netloc] = repo.get('connection').get('http').get('apikey')
+    repo_key = repo.get('connection').get('http').get('apikey')
+    if repo_key is not None and repo_uri[-4:] != '/api':
+        raise KeyError(f'A private registry uri should end in "/api", {repo_uri} does not, see https://docs.snowplow.io/docs/pipeline-components-and-applications/iglu/iglu-resolver/ for more details.')
+    repo_keys[repo_netloc] = repo_key
     # Get all schemas in each repo
-    if repo_keys[repo_netloc] is None:
-        repo_schemas = get_schema(parsed_uri.scheme + '://'+ repo_netloc + '/schemas', repo_keys)
-    else:
-        repo_schemas = get_schema(parsed_uri.scheme + '://'+ repo_netloc + '/api/schemas', repo_keys)
+    repo_schemas = get_schema(repo_uri + '/schemas', repo_keys)
     schemas_list[repo_uri] = repo_schemas
 
 # Organise list in order of priority

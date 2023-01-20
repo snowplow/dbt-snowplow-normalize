@@ -113,3 +113,20 @@ from
 where
     event_name in ('event_name7','event_name8')
     and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}
+
+UNION ALL
+
+select
+    event_id
+    , collector_tstamp
+    {% if target.type in ['databricks', 'spark'] -%}
+    , DATE(collector_tstamp) as collector_tstamp_date
+    {%- endif %}
+    , event_name
+    , 'custom_table_name7_6' as event_table_name
+    , event_id||'-'||'custom_table_name7_6' as unique_id
+from
+    {{ ref('snowplow_normalize_base_events_this_run') }}
+where
+    event_name in ('event_name9','event_name10')
+    and {{ snowplow_utils.is_run_with_new_events("snowplow_normalize") }}

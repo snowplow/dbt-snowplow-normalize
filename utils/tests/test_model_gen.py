@@ -46,6 +46,12 @@ def test_duplicates(capfd):
     out, err = capfd.readouterr()
     assert re.match(r"^KeyError: \"Configruation leads to duplicate event names, please remove the duplicates and try again\. Duplicates: \['snowplow_event_name1_1'\]\"$", err.split('\n')[-2])
 
+def test_missing_api(capfd):
+    system(f'python {os.path.join("utils", "snowplow_normalize_model_gen.py")} {os.path.join("utils", "tests", "test_normalize_config_invalid_resolver.json")}')
+    out, err = capfd.readouterr()
+    assert re.match(r"^KeyError: 'A private registry uri should end in \"/api\", https://normalize-test-prod\.iglu\.snplow\.net does not, see https://docs\.snowplow\.io/docs/pipeline-components-and-applications/iglu/iglu-resolver/ for more details\.'$", err.split('\n')[-2])
+
+
 class Test_types:
     def test_get_types(self):
         input = {'properties': {
@@ -132,7 +138,7 @@ class Test_parse_schema_url:
 
     def test_private_url(self):
         parsed_url = parse_schema_url('iglu:com.demo2/test_event_priv/jsonschema/1-0-0',
-        {'https://com-demo-private.net': ['iglu:com.demo/example_event_priv/jsonschema/1-0-0', 'iglu:com.demo2/test_event_priv/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event_pub/jsonschema/1-0-0', 'iglu:com.demo2/test_event_pub/jsonschema/1-0-0']},
+        {'https://com-demo-private.net/api': ['iglu:com.demo/example_event_priv/jsonschema/1-0-0', 'iglu:com.demo2/test_event_priv/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event_pub/jsonschema/1-0-0', 'iglu:com.demo2/test_event_pub/jsonschema/1-0-0']},
         {'iglucentral.com': None, 'com-demo-private.net': 'demo-key'})
         assert parsed_url == 'https://com-demo-private.net/api/schemas/com.demo2/test_event_priv/jsonschema/1-0-0'
 
@@ -150,7 +156,7 @@ class Test_parse_schema_url:
 
     def test_priority(self):
         parsed_url = parse_schema_url('iglu:com.demo/test_event/jsonschema/1-0-0',
-        {'https://com-demo-private.net': ['iglu:com.demo/example_event/jsonschema/1-0-0', 'iglu:com.demo/test_event/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event/jsonschema/1-0-0', 'iglu:com.demo/test_event/jsonschema/1-0-0']},
+        {'https://com-demo-private.net/api': ['iglu:com.demo/example_event/jsonschema/1-0-0', 'iglu:com.demo/test_event/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event/jsonschema/1-0-0', 'iglu:com.demo/test_event/jsonschema/1-0-0']},
         {'iglucentral.com': None, 'com-demo-private.net': 'demo-key'})
         assert parsed_url == 'https://com-demo-private.net/api/schemas/com.demo/test_event/jsonschema/1-0-0'
 
@@ -658,6 +664,13 @@ class Test_model_output:
             output = file.read()
 
         with open(os.path.join('utils', 'tests', 'expected', 'custom_table_name6_6.sql')) as file:
+            expected = file.read()
+
+    def test_no_flat_cols(self, setup_teardown):
+        with open(os.path.join('models', setup_teardown, 'custom_table_name7_6.sql')) as file:
+            output = file.read()
+
+        with open(os.path.join('utils', 'tests', 'expected', 'custom_table_name7_6.sql')) as file:
             expected = file.read()
 
         assert compare(output, expected)

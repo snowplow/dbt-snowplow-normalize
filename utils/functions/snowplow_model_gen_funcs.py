@@ -86,12 +86,8 @@ def parse_schema_url(url: str, schemas_list: dict, repo_keys: dict) -> str:
         verboseprint(f'Identifying registry for iglu schema {url} ...')
         for registry, schemas in schemas_list.items():
             if url in schemas:
-                if repo_keys[urlparse(registry).netloc] is not None:
-                    schema_path = registry + '/api/schemas/' + parsed_url.path
-                    return(schema_path)
-                else:
-                    schema_path = registry + '/schemas/' + parsed_url.path
-                    return(schema_path)
+                schema_path = registry + '/schemas/' + parsed_url.path
+                return(schema_path)
         raise ValueError(f'Schema {url} not found in any provided registry.')
     elif parsed_url.scheme == 'http':
         return(url)
