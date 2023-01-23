@@ -13,11 +13,11 @@ Please refer to the [doc site](https://docs.snowplow.io/docs/modeling-your-data/
 
 ### Adapter Support
 
-The snowplow-normalize v0.2.0 package currently supports BigQuery, Databricks & Snowflake.
+The snowplow-normalize v0.2.1 package currently supports BigQuery, Databricks & Snowflake.
 
 | Warehouse                        | dbt versions      | snowplow-normalize version |
 | :------------------------------: | :---------------: | :--------------------------: |
-| BigQuery, Databricks & Snowflake | >=1.3.0 to <2.0.0 | 0.2.0                        |
+| BigQuery, Databricks & Snowflake | >=1.3.0 to <2.0.0 | 0.2.1                        |
 | BigQuery, Databricks & Snowflake | >=1.0.0 to <2.0.0 | 0.1.0                        |
 
 
@@ -54,7 +54,7 @@ If you find a bug, please report an issue on GitHub.
 
 # Copyright and license
 
-The snowplow-normalize package is Copyright 2022 Snowplow Analytics Ltd.
+The snowplow-normalize package is Copyright 2022-2023 Snowplow Analytics Ltd.
 
 Licensed under the [Apache License, Version 2.0][license] (the "License");
 you may not use this software except in compliance with the License.

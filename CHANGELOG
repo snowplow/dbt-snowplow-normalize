@@ -1,3 +1,18 @@
+Snowplow Normalize 0.2.1 (2023-01-23)
+---------------------------------------
+## Summary
+This release fixes the expected path for a private registry to require it to end with `/api` in line with other resolvers. It also upgrades the schema requirement for the resolver to 1.0.3 so you can use newer resolver files without issues.
+
+## Features
+- Fix private registry uri requirement
+- Bump iglu resolver schema version
+
+## Under the hood
+- Fix github pages publishing action
+
+## Upgrading
+To upgrade the package, bump the version number in the packages.yml file in your project.
+
 Snowplow Normalize 0.2.0 (2022-12-19)
 ---------------------------------------
 ## Summary

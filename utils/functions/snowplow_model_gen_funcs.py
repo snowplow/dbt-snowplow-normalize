@@ -222,7 +222,7 @@ def parse_args(args: list):
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description = 'Produce dbt model files for normalizing your Snowplow events table into 1 table per event')
     parser.add_argument('config', help = 'relative path to your configuration file')
     parser.add_argument('--version', action='version',
-                        version='%(prog)s V0.2.0', help="show program's version number and exit")
+                        version='%(prog)s V0.2.1', help="show program's version number and exit")
     parser.add_argument('-v', '--verbose', dest = 'verbose', action = 'store_true', default = False, help = 'verbose flag for the running of the tool')
     parser.add_argument('--dryRun', dest = 'dryRun', action = 'store_true', default = False, help ='flag for a dry run (does not write/delete any files)')
     parser.add_argument('--configHelp', dest = 'configHelp', action = 'version', version = config_help, help = 'prints information relating to the structure of the config file')
