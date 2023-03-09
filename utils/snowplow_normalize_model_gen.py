@@ -1,5 +1,6 @@
 import sys
 from functions.snowplow_model_gen_funcs import *
+import re
 
 ## NOTE ##
 # vendorPrefix is not currently supported for prioritising specific registries
@@ -76,6 +77,7 @@ user_urls = config.get('users', {}).get('user_contexts')
 user_id_column = config.get('users', {}).get('user_id', {}).get('id_column') or 'user_id'
 user_id_sde = config.get('users', {}).get('user_id', {}).get('id_self_describing_event_schema')
 user_id_context = config.get('users', {}).get('user_id', {}).get('id_context_schema')
+user_alias = config.get('users', {}).get('user_id', {}).get('alias', 'user_id')
 
 # Raise a warning if both an sde AND a context column are specified
 if user_id_sde is not None and user_id_context is not None:
@@ -307,10 +309,16 @@ if user_urls is not None:
     user_keys = [list(user.get('properties').keys()) for user in user_jsons]
     user_types = [get_types(user) for user in user_jsons]
 
+    # Raise an error if user_id is in the context columns,
+    for key_set in user_keys:
+        for key in key_set:
+            if re.sub(r'(?<!^)(?=[A-Z])', '_', key).lower() == re.sub(r'(?<!^)(?=[A-Z])', '_', user_alias).lower():
+                raise KeyError(f'The user id alias ({user_alias}) exists as a key in one of your contexts (once converted to snakecase), please provide an alternative user id alias in the users section of your config.')
+
     users_model_content = f"""{{{{ config(
     tags = "snowplow_normalize_incremental",
     materialized = var("snowplow__incremental_materialization", "snowplow_incremental"),
-    unique_key = "user_id",
+    unique_key = "{user_alias}",
     upsert_date_key = "latest_collector_tstamp",
     partition_by = snowplow_utils.get_partition_by(bigquery_partition_by={{
       "field": "latest_collector_tstamp",
@@ -333,7 +341,8 @@ if user_urls is not None:
     '{user_id_context}',
     user_cols,
     user_keys,
-    user_types
+    user_types,
+    '{user_alias}'
 ) }}}}
 """
 

@@ -1,7 +1,7 @@
 {{ config(
     tags = "snowplow_normalize_incremental",
     materialized = var("snowplow__incremental_materialization", "snowplow_incremental"),
-    unique_key = "user_id",
+    unique_key = "custom_user_id_alias",
     upsert_date_key = "latest_collector_tstamp",
     partition_by = snowplow_utils.get_partition_by(bigquery_partition_by={
       "field": "latest_collector_tstamp",
@@ -24,5 +24,6 @@
     'CONTEXTS_COM_ZENDESK_SNOWPLOW_USER_1_0_0',
     user_cols,
     user_keys,
-    user_types
+    user_types,
+    'custom_user_id_alias'
 ) }}
