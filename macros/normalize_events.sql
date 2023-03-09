@@ -192,9 +192,9 @@ select
     {%- endif %}
     -- Flat columns from event table
     {% if flat_cols|length > 0 %}
-    {%- for col in flat_cols -%}
-    , {{ col }}
-    {% endfor -%}
+        {%- for col in flat_cols -%}
+            , {{ col }}
+        {% endfor -%}
     {%- endif -%}
     -- self describing events columns from event table
     {% if sde_cols_clean|length > 0 %}

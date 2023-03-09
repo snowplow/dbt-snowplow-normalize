@@ -58,6 +58,12 @@ macros:
       - name: user_types
         type: array of arrays
         description: List of list of types of the values of the keys within the respective user context column (only used in Snowflake)
+      - name: user_id_alias
+        type: string
+        description: The alias to apply to the user_id_field to help avoid clashes. Must match the unique key in the config
+      - name: flat_cols
+        type: array
+        description: List of (user related) flat columns from the atomic.events table to include
       - name: remove_new_event_check
         type: boolean
         description: A flag to disable the `with_new_events` part of the macro, to allow for integration tests to run
