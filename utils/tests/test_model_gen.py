@@ -51,6 +51,30 @@ def test_missing_api(capfd):
     out, err = capfd.readouterr()
     assert re.match(r"^KeyError: 'A private registry uri should end in \"/api\", https://normalize-test-prod\.iglu\.snplow\.net does not, see https://docs\.snowplow\.io/docs/pipeline-components-and-applications/iglu/iglu-resolver/ for more details\.'$", err.split('\n')[-2])
 
+# Test when there is a clash with the user id
+class Test_clashing_user_id:
+    @pytest.fixture(scope='class') # Only run once per class
+    def setup_teardown(self):
+        model_folder = str(uuid.uuid4())
+
+        with open(os.path.join("utils", "tests", "test_normalize_config_clash_user.json"), 'r') as file:
+            config_template = file.read()
+        config_template = config_template.replace('$1', model_folder)
+
+        with open(os.path.join("utils", "tests", "test_normalize_config_clash_user_filled.json"), 'w') as file:
+            file.write(config_template)
+
+        yield model_folder
+
+        # teardown code
+        shutil.rmtree(os.path.join('models', model_folder))
+        os.remove(os.path.join("utils", "tests", "test_normalize_config_clash_user_filled.json"))
+
+    def test_clashing_user_id_key(self, setup_teardown, capfd):
+        system(f'python {os.path.join("utils", "snowplow_normalize_model_gen.py")} {os.path.join("utils", "tests", "test_normalize_config_clash_user_filled.json")}')
+        out, err = capfd.readouterr()
+        assert re.match(r"^KeyError: 'The user id alias \(spider_or_robot\) exists as a key in one of your contexts \(once converted to snakecase\), please provide an alternative user id alias in the users section of your config\.'$", err.split('\n')[-2])
+
 
 class Test_types:
     def test_get_types(self):

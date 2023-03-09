@@ -1,8 +1,8 @@
-{% macro users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false) %}
-    {{ return(adapter.dispatch('users_table', 'snowplow_normalize')(user_id_field, user_id_sde, user_id_context, user_cols, user_keys, user_types, remove_new_event_check)) }}
+{% macro users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false, user_id_alias = 'user_id') %}
+    {{ return(adapter.dispatch('users_table', 'snowplow_normalize')(user_id_field, user_id_sde, user_id_context, user_cols, user_keys, user_types, remove_new_event_check, user_id_alias)) }}
 {% endmacro %}
 
-{% macro snowflake__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false) %}
+{% macro snowflake__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false, user_id_alias = 'user_id') %}
 {# Remove down to major version for Snowflake columns, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
@@ -13,15 +13,16 @@
 {%- if user_id_sde != '' and user_id_context != '' -%}
 {% do exceptions.warn("Snowplow: Both a user_id sde column and context column provided, only the sde column will be used.") %}
 {%- endif -%}
+{%- set snake_user_id =  snowplow_normalize.snakeify_case(user_id_alias) -%}
 
 with defined_user_id as (
 select
     {% if user_id_sde == '' and user_id_context == '' %}
-        {{snowplow_normalize.snakeify_case(user_id_field)}} as user_id {# Snakeify case of standard column even in snowflake #}
+        {{snowplow_normalize.snakeify_case(user_id_field)}} as {{ snake_user_id }} {# Snakeify case of standard column even in snowflake #}
     {% elif user_id_sde != '' %}
-        {{ '_'.join(user_id_sde.split('_')[:-2]) }}:{{user_id_field}}::string as user_id
+        {{ '_'.join(user_id_sde.split('_')[:-2]) }}:{{user_id_field}}::string as {{ snake_user_id }}
     {% elif user_id_context != '' %}
-        {{ '_'.join(user_id_context.split('_')[:-2]) }}[0]:{{user_id_field}}::string as user_id
+        {{ '_'.join(user_id_context.split('_')[:-2]) }}[0]:{{user_id_field}}::string as {{ snake_user_id }}
     {%- endif %}
     , collector_tstamp as latest_collector_tstamp
     -- user column(s) from the event table
@@ -47,13 +48,13 @@ select
 from
     defined_user_id
 where
-    user_id is not null
+    {{ snake_user_id }} is not null
 qualify
-    row_number() over (partition by user_id order by latest_collector_tstamp desc) = 1
+    row_number() over (partition by {{ snake_user_id }} order by latest_collector_tstamp desc) = 1
 {% endmacro %}
 
 
-{% macro bigquery__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false) %}
+{% macro bigquery__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false, user_id_alias = 'user_id') %}
 {# Remove down to major version for bigquery combine columns macro, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
@@ -76,12 +77,13 @@ qualify
 {% do exceptions.warn("Snowplow: Both a user_id sde column and context column provided, only the sde column will be used.") %}
 {%- endif -%}
 
+{%- set snake_user_id =  snowplow_normalize.snakeify_case(user_id_alias) -%}
 
 
 with defined_user_id as (
     select
         {% if user_id_sde == '' and user_id_context == ''%}
-            {{snowplow_normalize.snakeify_case(user_id_field)}} as user_id
+            {{snowplow_normalize.snakeify_case(user_id_field)}} as {{ snake_user_id }}
         {% elif user_id_sde != '' %}
         {# Coalesce the sde column for the custom user_id field  #}
             {%- set user_id_sde_coal = snowplow_utils.combine_column_versions(
@@ -90,7 +92,7 @@ with defined_user_id as (
                                         include_field_alias = False,
                                         required_fields = [ user_id_field ]
                                         ) -%}
-            {{ user_id_sde_coal[0] }} as user_id
+            {{ user_id_sde_coal[0] }} as {{ snake_user_id }}
 
         {% elif user_id_context != '' %}
         {# Coalesce the context column for the custom user_id field  #}
@@ -100,7 +102,7 @@ with defined_user_id as (
                                         include_field_alias = False,
                                         required_fields = [ user_id_field ]
                                         ) -%}
-            {{ user_id_cont_coal[0] }} as user_id
+            {{ user_id_cont_coal[0] }} as {{ snake_user_id }}
         {%- endif %}
         , collector_tstamp as latest_collector_tstamp
         -- user column(s) from the event table
@@ -130,11 +132,11 @@ with defined_user_id as (
 users_ordering as (
     select
         a.*
-        , row_number() over (partition by user_id order by latest_collector_tstamp desc) as rn
+        , row_number() over (partition by snake_user_id order by latest_collector_tstamp desc) as rn
     from
         defined_user_id a
     where
-        user_id is not null
+        snake_user_id is not null
 )
 
 {# Ensure only latest record is upserted into the table #}
@@ -146,7 +148,7 @@ where
     rn = 1
 {% endmacro %}
 
-{% macro databricks__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false) %}
+{% macro databricks__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false, user_id_alias = 'user_id') %}
 {# Remove down to major version for Databricks columns, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
@@ -169,15 +171,16 @@ where
 {% do exceptions.warn("Snowplow: Both a user_id sde column and context column provided, only the sde column will be used.") %}
 {%- endif -%}
 
+{%- set snake_user_id =  snowplow_normalize.snakeify_case(user_id_alias) -%}
 
 with defined_user_id as (
     select
         {% if user_id_sde == '' and user_id_context == ''%}
-            {{ user_id_field }} as user_id
+            {{ user_id_field }} as {{ snake_user_id }}
         {% elif user_id_sde != '' %}
-            {{ '_'.join(user_id_sde.split('_')[:-2]) }}.{{ user_id_field }} as user_id
+            {{ '_'.join(user_id_sde.split('_')[:-2]) }}.{{ user_id_field }} as {{ snake_user_id }}
         {% elif user_id_context != '' %}
-            {{ '_'.join(user_id_context.split('_')[:-2]) }}[0].{{ user_id_field }} as user_id
+            {{ '_'.join(user_id_context.split('_')[:-2]) }}[0].{{ user_id_field }} as {{ snake_user_id }}
         {%- endif %}
         , collector_tstamp as latest_collector_tstamp
         {% if target.type in ['databricks', 'spark'] -%}
@@ -205,11 +208,11 @@ with defined_user_id as (
 users_ordering as (
 select
     a.*
-    , row_number() over (partition by user_id order by latest_collector_tstamp desc) as rn
+    , row_number() over (partition by snake_user_id order by latest_collector_tstamp desc) as rn
 from
     defined_user_id a
 where
-    user_id is not null
+    snake_user_id is not null
 )
 
 {# Ensure only latest record is upserted into the table #}
