@@ -1,8 +1,8 @@
-{% macro users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false, user_id_alias = 'user_id') %}
-    {{ return(adapter.dispatch('users_table', 'snowplow_normalize')(user_id_field, user_id_sde, user_id_context, user_cols, user_keys, user_types, remove_new_event_check, user_id_alias)) }}
+{% macro users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], user_id_alias = 'user_id', flat_cols = [], remove_new_event_check = false) %}
+    {{ return(adapter.dispatch('users_table', 'snowplow_normalize')(user_id_field, user_id_sde, user_id_context, user_cols, user_keys, user_types, user_id_alias, flat_cols, remove_new_event_check)) }}
 {% endmacro %}
 
-{% macro snowflake__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false, user_id_alias = 'user_id') %}
+{% macro snowflake__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], user_id_alias = 'user_id', flat_cols = [], remove_new_event_check = false) %}
 {# Remove down to major version for Snowflake columns, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
@@ -25,6 +25,12 @@ select
         {{ '_'.join(user_id_context.split('_')[:-2]) }}[0]:{{user_id_field}}::string as {{ snake_user_id }}
     {%- endif %}
     , collector_tstamp as latest_collector_tstamp
+    -- Flat columns from event table
+    {% if flat_cols|length > 0 %}
+        {%- for col in flat_cols -%}
+            , {{ col }}
+        {% endfor -%}
+    {%- endif -%}
     -- user column(s) from the event table
     {% if user_cols_clean|length > 0 %}
         {%- for col, col_ind in zip(user_cols_clean, range(user_cols_clean|length)) -%} {# Loop over each context column provided #}
@@ -54,7 +60,7 @@ qualify
 {% endmacro %}
 
 
-{% macro bigquery__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false, user_id_alias = 'user_id') %}
+{% macro bigquery__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], user_id_alias = 'user_id', flat_cols = [], remove_new_event_check = false) %}
 {# Remove down to major version for bigquery combine columns macro, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
@@ -105,6 +111,12 @@ with defined_user_id as (
             {{ user_id_cont_coal[0] }} as {{ snake_user_id }}
         {%- endif %}
         , collector_tstamp as latest_collector_tstamp
+        -- Flat columns from event table
+        {% if flat_cols|length > 0 %}
+            {%- for col in flat_cols -%}
+                , {{ col }}
+            {% endfor -%}
+        {%- endif -%}
         -- user column(s) from the event table
         {% if user_cols|length > 0 %}
             {%- for col, col_ind in zip(user_cols_clean, range(user_cols|length)) -%}  {# Loop over each context column, getting the coalesced version#}
@@ -132,11 +144,11 @@ with defined_user_id as (
 users_ordering as (
     select
         a.*
-        , row_number() over (partition by snake_user_id order by latest_collector_tstamp desc) as rn
+        , row_number() over (partition by {{ snake_user_id }} order by latest_collector_tstamp desc) as rn
     from
         defined_user_id a
     where
-        snake_user_id is not null
+        {{ snake_user_id }} is not null
 )
 
 {# Ensure only latest record is upserted into the table #}
@@ -148,7 +160,7 @@ where
     rn = 1
 {% endmacro %}
 
-{% macro databricks__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], remove_new_event_check = false, user_id_alias = 'user_id') %}
+{% macro databricks__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], user_id_alias = 'user_id', flat_cols = [], remove_new_event_check = false) %}
 {# Remove down to major version for Databricks columns, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}
@@ -186,6 +198,12 @@ with defined_user_id as (
         {% if target.type in ['databricks', 'spark'] -%}
             , DATE(collector_tstamp) as latest_collector_tstamp_date
         {%- endif %}
+        -- Flat columns from event table
+        {% if flat_cols|length > 0 %}
+            {%- for col in flat_cols -%}
+                , {{ col }}
+            {% endfor -%}
+        {%- endif -%}
         -- user column(s) from the event table
         {% if user_cols_clean|length > 0 %}
             {%- for col, col_ind in zip(user_cols_clean, range(user_cols_clean|length)) -%} {# Loop over each context column provided #}
@@ -208,11 +226,11 @@ with defined_user_id as (
 users_ordering as (
 select
     a.*
-    , row_number() over (partition by snake_user_id order by latest_collector_tstamp desc) as rn
+    , row_number() over (partition by {{ snake_user_id }} order by latest_collector_tstamp desc) as rn
 from
     defined_user_id a
 where
-    snake_user_id is not null
+    {{ snake_user_id }} is not null
 )
 
 {# Ensure only latest record is upserted into the table #}
