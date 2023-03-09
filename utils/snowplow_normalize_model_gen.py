@@ -78,6 +78,7 @@ user_id_column = config.get('users', {}).get('user_id', {}).get('id_column') or 
 user_id_sde = config.get('users', {}).get('user_id', {}).get('id_self_describing_event_schema')
 user_id_context = config.get('users', {}).get('user_id', {}).get('id_context_schema')
 user_alias = config.get('users', {}).get('user_id', {}).get('alias', 'user_id')
+user_flat_cols = config.get('users', {}).get('user_columns')
 
 # Raise a warning if both an sde AND a context column are specified
 if user_id_sde is not None and user_id_context is not None:
@@ -297,23 +298,24 @@ else:
 #######################
 # Produce users model #
 #######################
-if user_urls is not None:
+if user_urls is not None or user_flat_cols is not None:
     verboseprint('Generating users table model...')
-    user_url_cut = [urlparse(url).path for url in user_urls]
-    user_jsons = [get_schema(parse_schema_url(url, schemas_list, repo_keys), repo_keys) for url in user_urls]
-    for i, user_json in enumerate(user_jsons):
-        if not validate_json(user_json, validate = validate_schemas, schemas_list = schemas_list, repo_keys = repo_keys):
-            raise ValueError(f'Validation of schema {user_urls[i]} failed.')
+    if user_urls is not None:
+        user_url_cut = [urlparse(url).path for url in user_urls]
+        user_jsons = [get_schema(parse_schema_url(url, schemas_list, repo_keys), repo_keys) for url in user_urls]
+        for i, user_json in enumerate(user_jsons):
+            if not validate_json(user_json, validate = validate_schemas, schemas_list = schemas_list, repo_keys = repo_keys):
+                raise ValueError(f'Validation of schema {user_urls[i]} failed.')
     # Generate final form data for insert into model
-    user_cols = ['CONTEXTS_' + url_to_column(url) for url in user_url_cut]
-    user_keys = [list(user.get('properties').keys()) for user in user_jsons]
-    user_types = [get_types(user) for user in user_jsons]
+        user_cols = ['CONTEXTS_' + url_to_column(url) for url in user_url_cut]
+        user_keys = [list(user.get('properties').keys()) for user in user_jsons]
+        user_types = [get_types(user) for user in user_jsons]
 
-    # Raise an error if user_id is in the context columns,
-    for key_set in user_keys:
-        for key in key_set:
-            if re.sub(r'(?<!^)(?=[A-Z])', '_', key).lower() == re.sub(r'(?<!^)(?=[A-Z])', '_', user_alias).lower():
-                raise KeyError(f'The user id alias ({user_alias}) exists as a key in one of your contexts (once converted to snakecase), please provide an alternative user id alias in the users section of your config.')
+        # Raise an error if user_id is in the context columns,
+        for key_set in user_keys:
+            for key in key_set:
+                if re.sub(r'(?<!^)(?=[A-Z])', '_', key).lower() == re.sub(r'(?<!^)(?=[A-Z])', '_', user_alias).lower():
+                    raise KeyError(f'The user id alias ({user_alias}) exists as a key in one of your contexts (once converted to snakecase), please provide an alternative user id alias in the users section of your config.')
 
     users_model_content = f"""{{{{ config(
     tags = "snowplow_normalize_incremental",
@@ -331,6 +333,7 @@ if user_urls is not None:
     }}
 ) }}}}
 
+{{%- set user_flat_cols = {user_flat_cols or []} -%}}
 {{%- set user_cols = {user_cols or []} -%}}
 {{%- set user_keys = {user_keys or []} -%}}
 {{%- set user_types = {user_types or []} -%}}
@@ -342,7 +345,8 @@ if user_urls is not None:
     user_cols,
     user_keys,
     user_types,
-    '{user_alias}'
+    '{user_alias}',
+    user_flat_cols
 ) }}}}
 """
 

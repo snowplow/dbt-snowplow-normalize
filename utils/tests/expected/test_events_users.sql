@@ -14,6 +14,7 @@
     }
 ) }}
 
+{%- set user_flat_cols = ['domain_userid', 'app_id', 'refr_urlpath'] -%}
 {%- set user_cols = ['CONTEXTS_COM_SNOWPLOWANALYTICS_SNOWPLOW_UA_PARSER_CONTEXT_1_0_0', 'CONTEXTS_COM_IAB_SNOWPLOW_SPIDERS_AND_ROBOTS_1_0_0'] -%}
 {%- set user_keys = [['useragentFamily', 'useragentMajor', 'useragentMinor', 'useragentPatch', 'useragentVersion', 'osFamily', 'osMajor', 'osMinor', 'osPatch', 'osPatchMinor', 'osVersion', 'deviceFamily'], ['spiderOrRobot', 'category', 'reason', 'primaryImpact']] -%}
 {%- set user_types = [['string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string', 'string'], ['boolean', 'string', 'string', 'string']] -%}
@@ -25,5 +26,6 @@
     user_cols,
     user_keys,
     user_types,
-    'custom_user_id_alias'
+    'custom_user_id_alias',
+    user_flat_cols
 ) }}

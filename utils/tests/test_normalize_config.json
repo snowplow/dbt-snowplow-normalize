@@ -120,6 +120,9 @@
             "alias": "custom_user_id_alias"
         },
         "user_contexts": ["iglu:com.snowplowanalytics.snowplow/ua_parser_context/jsonschema/1-0-0",
-            "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0"]
+            "iglu:com.iab.snowplow/spiders_and_robots/jsonschema/1-0-0"],
+            "user_columns": ["domain_userid",
+                            "app_id",
+                            "refr_urlpath"]
     }
 }
