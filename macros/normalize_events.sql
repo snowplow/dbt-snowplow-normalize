@@ -102,38 +102,44 @@ select
     -- self describing events columns from event table
     {% if sde_cols|length > 0 %}
         {%- for col, col_ind in zip(sde_cols_clean, range(sde_cols|length)) -%} {# Loop over each sde column, get coalesced version of keys #}
+            {# Prep the alias columns #}
+            {%- if sde_aliases|length > 0 -%}
+                {%- set required_aliases = [] -%}
+                {%- for i in range(sde_keys_clean[col_ind]|length) -%}
+                    {%- do required_aliases.append(sde_aliases[col_ind] ~ '_' ~ sde_keys_clean[col_ind][i]) -%}
+                {%- endfor -%}
+            {%- else -%}
+                {%- set required_aliases = sde_keys_clean[col_ind] -%}
+            {%- endif -%}
             {%- set sde_col_list = snowplow_utils.combine_column_versions(
                                         relation=ref('snowplow_normalize_base_events_this_run'),
                                         column_prefix=col.lower(),
-                                        include_field_alias = False,
-                                        required_fields = sde_keys_clean[col_ind]
+                                        required_fields = zip(sde_keys_clean[col_ind], required_aliases)
                                         ) -%}
-            {% for field, key_ind in zip(sde_col_list, range(sde_col_list|length)) %} {# Loop over each key within the column, appling the bespoke alias as needed #}
+            {%- for field, key_ind in zip(sde_col_list, range(sde_col_list|length)) -%} {# Loop over each key within the column, appling the bespoke alias as needed #}
                 , {{field}}
-                {%- if sde_aliases|length > 0 -%} {# The following contains a very cursed hack to ensure there is a space before the as, as I can't promise it ends up on a newline  #}
-                    {# #} as {{ sde_aliases[col_ind] }}_{{ sde_keys_clean[col_ind][key_ind] }}
-                {%- else -%}
-                    {# #} as {{ sde_keys_clean[col_ind][key_ind] }}
-                {%- endif -%}
             {% endfor -%}
         {%- endfor -%}
     {%- endif %}
     -- context column(s) from the event table
     {% if context_cols|length > 0 %}
         {%- for col, col_ind in zip(context_cols_clean, range(context_cols|length)) -%} {# Loop over each context column, get coalesced version of keys #}
+            {# Prep the alias columns #}
+            {%- if context_aliases|length > 0 -%}
+                {%- set required_aliases = [] -%}
+                {%- for i in range(context_keys_clean[col_ind]|length) -%}
+                    {%- do required_aliases.append(context_aliases[col_ind] ~ '_' ~ context_keys_clean[col_ind][i]) -%}
+                {%- endfor -%}
+            {%- else -%}
+                {%- set required_aliases = context_keys_clean[col_ind] -%}
+            {%- endif -%}
             {%- set cont_col_list = snowplow_utils.combine_column_versions(
                                         relation=ref('snowplow_normalize_base_events_this_run'),
                                         column_prefix=col.lower(),
-                                        include_field_alias = False,
-                                        required_fields = context_keys_clean[col_ind]
+                                        required_fields = zip(context_keys_clean[col_ind], required_aliases)
                                         ) -%}
-            {% for field, key_ind in zip(cont_col_list, range(cont_col_list|length)) %} {# Loop over each key within the column, appling the bespoke alias as needed #}
+            {%- for field, key_ind in zip(cont_col_list, range(cont_col_list|length)) -%} {# Loop over each key within the column #}
                 , {{field}}
-                {%- if context_aliases|length > 0 -%} {# The following contains a very cursed hack to ensure there is a space before the as, as I can't promise it ends up on a newline #}
-                    {# #} as {{ context_aliases[col_ind] }}_{{ context_keys_clean[col_ind][key_ind] }}
-                {%- else -%}
-                    {# #} as {{ context_keys_clean[col_ind][key_ind] }}
-                {%- endif -%}
             {% endfor -%}
         {%- endfor -%}
     {%- endif %}
