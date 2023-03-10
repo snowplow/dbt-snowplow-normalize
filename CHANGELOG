@@ -1,3 +1,19 @@
+Snowplow Normalize 0.2.2 (2023-03-13)
+---------------------------------------
+## Summary
+This release fixes an issue with column aliasing in BigQuery when the schema order differs from the table in the warehouse. It also adds the ability to alias your `user_id` column and add flat `atomic.events` columns into your `users` table.
+
+## Features
+- Fix column alias ordering issue in BigQuery
+- Add ability to alias `user_id` column
+- Add ability to add flat columns to the events table
+
+## Under the hood
+- Alter github pages publishing action
+
+## Upgrading
+To upgrade the package, bump the version number in the packages.yml file in your project. To use the new features please see our docs for the new values to add to your config file.
+
 Snowplow Normalize 0.2.1 (2023-01-23)
 ---------------------------------------
 ## Summary
