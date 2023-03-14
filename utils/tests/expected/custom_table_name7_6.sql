@@ -1,17 +1,18 @@
 {{ config(
     tags = "snowplow_normalize_incremental",
-    materialized = var("snowplow__incremental_materialization", "snowplow_incremental"),
+    materialized = "incremental",
     unique_key = "event_id",
     upsert_date_key = "collector_tstamp",
-    partition_by = snowplow_utils.get_partition_by(bigquery_partition_by={
+    partition_by = snowplow_utils.get_value_by_target_type(bigquery_val={
       "field": "collector_tstamp",
       "data_type": "timestamp"
-    }, databricks_partition_by='collector_tstamp_date'),
+    }, databricks_val='collector_tstamp_date'),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
     tblproperties={
       'delta.autoOptimize.optimizeWrite' : 'true',
       'delta.autoOptimize.autoCompact' : 'true'
-    }
+    },
+    snowplow_optimize=true
 ) }}
 
 {%- set event_names = ['event_name9', 'event_name10'] -%}
