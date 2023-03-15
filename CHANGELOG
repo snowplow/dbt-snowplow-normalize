@@ -1,10 +1,10 @@
-Snowplow Normalize 0.2.3 (2023-0X-XX)
+Snowplow Normalize 0.2.3 (2023-03-16)
 ---------------------------------------
 ## Summary
 This release allows users to disable the days late data filter to enable normalizing of events that don't populate the `dvce_sent_tstamp` field.
 
 ## Features
-- Allow disabling of days late filter by setting `snowplow__days_late_allowed` to `-1`
+- Allow disabling of days late filter by setting `snowplow__days_late_allowed` to `-1` (#28)
 
 ## Upgrading
 To upgrade the package, bump the version number in the packages.yml file in your project. 
