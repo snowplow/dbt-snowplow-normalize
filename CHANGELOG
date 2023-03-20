@@ -1,4 +1,4 @@
-Snowplow Normalize 0.3.0 (2023-0X-XX)
+Snowplow Normalize 0.3.0 (2023-03-28)
 ---------------------------------------
 ## Summary
 This version migrates our models away from the `snowplow_incremental_materialization` and instead move to using the built-in `incremental` with an optimization applied on top. 
