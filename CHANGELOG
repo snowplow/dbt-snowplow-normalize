@@ -1,3 +1,14 @@
+Snowplow Normalize 0.3.1 (2023-06-14)
+---------------------------------------
+## Summary
+This version bumps the requirement of the `jsonschema` package to validate schemas with the `MultipleOf` property.
+
+## Fixes
+- Bump `jsonschema` minimum version (Close #33)
+
+## Upgrading
+To upgrade the package, bump the version number in the `packages.yml` file in your project.
+
 Snowplow Normalize 0.3.0 (2023-03-28)
 ---------------------------------------
 ## Summary
