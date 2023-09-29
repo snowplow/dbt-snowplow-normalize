@@ -1,3 +1,14 @@
+Snowplow Normalize 0.3.3 (2023-09-29)
+---------------------------------------
+## Summary
+- Include the new base macro functionality from utils in the package
+- Allow users to specify the timestamp used to process events (from the default of `collector_tstamp`)
+
+## Under the hood
+- Simplify the model architecture
+## Upgrading
+Bump the snowplow-normalize version in your `packages.yml` file.
+
 Snowplow Normalize 0.3.2 (2023-09-12)
 ---------------------------------------
 ## Summary
@@ -19,11 +30,11 @@ To upgrade the package, bump the version number in the `packages.yml` file in yo
 Snowplow Normalize 0.3.0 (2023-03-28)
 ---------------------------------------
 ## Summary
-This version migrates our models away from the `snowplow_incremental_materialization` and instead move to using the built-in `incremental` with an optimization applied on top. 
+This version migrates our models away from the `snowplow_incremental_materialization` and instead move to using the built-in `incremental` with an optimization applied on top.
 
 ## 🚨 Breaking Changes 🚨
 ### Changes to materialization
-To take advantage of the optimization we apply to the `incremental` materialization, users will need to add the following to their `dbt_project.yml` : 
+To take advantage of the optimization we apply to the `incremental` materialization, users will need to add the following to their `dbt_project.yml` :
 ```yaml
 # dbt_project.yml
 ...
@@ -53,7 +64,7 @@ This release allows users to disable the days late data filter to enable normali
 - Allow disabling of days late filter by setting `snowplow__days_late_allowed` to `-1` (#28)
 
 ## Upgrading
-To upgrade the package, bump the version number in the packages.yml file in your project. 
+To upgrade the package, bump the version number in the packages.yml file in your project.
 
 Snowplow Normalize 0.2.2 (2023-03-13)
 ---------------------------------------
@@ -122,7 +133,7 @@ Once you have upgraded your config file, the easiest way to ensure your models m
   - Change the `unique_key` in the config section to `unique_id`
   - Add a line between the `event_table_name` and `from` lines for each select statement; `, event_id||'-'||'<that_event_table_name>' as unique_id`, with the event table name for that select block.
 - For your users table:
-  - Add 3 new values to the start of the macro call, `'user_id','',''`, before the `user_cols` argument. 
+  - Add 3 new values to the start of the macro call, `'user_id','',''`, before the `user_cols` argument.
 
 ### Upgrade your filtered events table
 If you use the master filtered events table, you will need to add a new column for the latest version to work. If you have not processed much data yet it may be easier to simply re-run the package from scratch using `dbt run --full-refresh --vars 'snowplow__allow_refresh: true'`, alternatively run the following in your warehouse, replacing the schema/dataset/warehouse and table name for your table:
