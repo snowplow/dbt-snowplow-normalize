@@ -1,3 +1,15 @@
+Snowplow Normalize 0.3.4 (2024-01-26)
+---------------------------------------
+## Summary
+This version bumps the package dependency to add support for the latest snowplow utils package. Please note that from this version onwards this package is under the SPAL license.
+
+## Under the hood
+- Bump support for latest utils
+- Migrate to SPAL license
+
+## Upgrading
+To upgrade simply bump the snowplow-normalize version in your `packages.yml` file.
+
 Snowplow Normalize 0.3.3 (2023-09-29)
 ---------------------------------------
 ## Summary
