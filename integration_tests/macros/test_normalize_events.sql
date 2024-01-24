@@ -1,3 +1,10 @@
+{#
+Copyright (c) 2022-present Snowplow Analytics Ltd. All rights reserved.
+This program is licensed to you under the Snowplow Personal and Academic License Version 1.0,
+and you may not use this file except in compliance with the Snowplow Personal and Academic License Version 1.0.
+You may obtain a copy of the Snowplow Personal and Academic License Version 1.0 at https://docs.snowplow.io/personal-and-academic-license-1.0/
+#}
+
 {# This tests the output of a dummy set of inputs to the normalize events macro to ensure that it returns what we expect to come out does.
 This doesn't run on any actual data, we are just comparing the sql that is generated - removing whitespace to allow for changes to that.
 Note that we have to pass the test = true argument for this to work without having to create all the manifest and event limits table.

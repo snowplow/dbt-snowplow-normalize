@@ -1,3 +1,10 @@
+{#
+Copyright (c) 2022-present Snowplow Analytics Ltd. All rights reserved.
+This program is licensed to you under the Snowplow Personal and Academic License Version 1.0,
+and you may not use this file except in compliance with the Snowplow Personal and Academic License Version 1.0.
+You may obtain a copy of the Snowplow Personal and Academic License Version 1.0 at https://docs.snowplow.io/personal-and-academic-license-1.0/
+#}
+
 {% macro users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], user_id_alias = 'user_id', flat_cols = [], remove_new_event_check = false) %}
     {{ return(adapter.dispatch('users_table', 'snowplow_normalize')(user_id_field, user_id_sde, user_id_context, user_cols, user_keys, user_types, user_id_alias, flat_cols, remove_new_event_check)) }}
 {% endmacro %}
