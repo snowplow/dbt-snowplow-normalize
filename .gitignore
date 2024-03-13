@@ -187,3 +187,4 @@ junit/*
 .DS_Store
 dbt-service-account.json
 integration_tests/package-lock.yml
+package-lock.yml

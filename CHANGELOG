@@ -10,7 +10,7 @@ This release adds support for [schema grants](https://docs.snowplow.io/docs/mode
 - Enforce full refresh flag to refresh manifest tables
 
 ## Upgrading
-To upgrade simply bump the snowplow-media-player version in your `packages.yml` file. Note the minimum version of snowplow-utils required is now 0.16.2
+To upgrade simply bump the snowplow-normalize version in your `packages.yml` file. Note the minimum version of snowplow-utils required is now 0.16.2
 
 Snowplow Normalize 0.3.4 (2024-01-26)
 ---------------------------------------
