@@ -65,10 +65,14 @@ where
 
 
 {% macro bigquery__normalize_events(event_names, flat_cols = [], sde_cols = [], sde_keys = [], sde_types = [], sde_aliases = [], context_cols = [], context_keys = [], context_types = [], context_aliases = [], remove_new_event_check = false) %}
-{# Remove down to major version for bigquery combine columns macro, drop 2 last _X values #}
+{# For old version of BQ loader: Remove down to major version for bigquery combine columns macro, drop 2 last _X values. Otherwise keep it as is #}
 {%- set sde_cols_clean = [] -%}
 {%- for ind in range(sde_cols|length) -%}
-    {% do sde_cols_clean.append('_'.join(sde_cols[ind].split('_')[:-2])) -%}
+    {% if sde_cols[ind].split('_')[-2].isnumeric() and sde_cols[ind].split('_')[-1].isnumeric() %}
+        {% do sde_cols_clean.append('_'.join(sde_cols[ind].split('_')[:-2])) %}
+    {% else %}
+        {% do sde_cols_clean.append(sde_cols[ind]) %}
+    {% endif %}
 {%- endfor -%}
 {%- set context_cols_clean = [] -%}
 {%- for ind in range(context_cols|length) -%}
