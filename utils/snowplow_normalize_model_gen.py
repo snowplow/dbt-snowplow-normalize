@@ -323,9 +323,9 @@ if user_urls is not None or user_flat_cols is not None:
     tags = "snowplow_normalize_incremental",
     materialized = "incremental",
     unique_key = "{user_alias}",
-    upsert_date_key = "latest_collector_tstamp",
+    upsert_date_key = "latest_selected_tstamp",
     partition_by = snowplow_utils.get_value_by_target_type(bigquery_val={{
-      "field": "latest_collector_tstamp",
+      "field": "latest_selected_tstamp",
       "data_type": "timestamp"
     }}, databricks_val='latest_collector_tstamp_date'),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
