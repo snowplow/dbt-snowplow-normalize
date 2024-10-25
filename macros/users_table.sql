@@ -31,7 +31,7 @@ select
     {% elif user_id_context != '' %}
         {{ '_'.join(user_id_context.split('_')[:-2]) }}[0]:{{user_id_field}}::string as {{ snake_user_id }}
     {%- endif %}
-    , {{ var('snowplow__partition_key') }} as latest_selected_tstamp
+    , collector_tstamp as latest_collector_tstamp
     -- Flat columns from event table
     {% if flat_cols|length > 0 %}
         {%- for col in flat_cols -%}
@@ -63,7 +63,7 @@ from
 where
     {{ snake_user_id }} is not null
 qualify
-    row_number() over (partition by {{ snake_user_id }} order by latest_selected_tstamp desc) = 1
+    row_number() over (partition by {{ snake_user_id }} order by latest_collector_tstamp desc) = 1
 {% endmacro %}
 
 
@@ -117,7 +117,7 @@ with defined_user_id as (
                                         ) -%}
             {{ user_id_cont_coal[0] }} as {{ snake_user_id }}
         {%- endif %}
-        , {{ var('snowplow__partition_key') }} as latest_selected_tstamp
+        , collector_tstamp as latest_collector_tstamp
         -- Flat columns from event table
         {% if flat_cols|length > 0 %}
             {%- for col in flat_cols -%}
@@ -151,7 +151,7 @@ with defined_user_id as (
 users_ordering as (
     select
         a.*
-        , row_number() over (partition by {{ snake_user_id }} order by latest_selected_tstamp desc) as rn
+        , row_number() over (partition by {{ snake_user_id }} order by latest_collector_tstamp desc) as rn
     from
         defined_user_id a
     where
@@ -201,9 +201,9 @@ with defined_user_id as (
         {% elif user_id_context != '' %}
             {{ '_'.join(user_id_context.split('_')[:-2]) }}[0].{{ user_id_field }} as {{ snake_user_id }}
         {%- endif %}
-        ,  {{ var('snowplow__partition_key') }} as latest_selected_tstamp
+        , collector_tstamp as latest_collector_tstamp
         {% if target.type in ['databricks', 'spark'] -%}
-            , DATE( {{ var('snowplow__partition_key') }}) as latest_selected_tstamp_date
+            , DATE(collector_tstamp) as latest_collector_tstamp_date
         {%- endif %}
         -- Flat columns from event table
         {% if flat_cols|length > 0 %}
@@ -233,7 +233,7 @@ with defined_user_id as (
 users_ordering as (
 select
     a.*
-    , row_number() over (partition by {{ snake_user_id }} order by latest_selected_tstamp desc) as rn
+    , row_number() over (partition by {{ snake_user_id }} order by latest_collector_tstamp desc) as rn
 from
     defined_user_id a
 where

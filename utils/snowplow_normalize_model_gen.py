@@ -195,9 +195,9 @@ for i in range(len(event_names)):
     tags = "snowplow_normalize_incremental",
     materialized = "incremental",
     unique_key = "event_id",
-    upsert_date_key = var('snowplow__partition_key'),
+    upsert_date_key = "collector_tstamp",
     partition_by = snowplow_utils.get_value_by_target_type(bigquery_val={{
-      "field": var('snowplow__partition_key'),
+      "field":  var("snowplow__partition_key"),
       "data_type": "timestamp"
     }}, databricks_val='collector_tstamp_date'),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
@@ -251,9 +251,9 @@ if filtered_events_table_name is not None:
     tags = "snowplow_normalize_incremental",
     materialized = "incremental",
     unique_key = "unique_id",
-    upsert_date_key = var('snowplow__partition_key'),
+    upsert_date_key = "collector_tstamp",
     partition_by = snowplow_utils.get_value_by_target_type(bigquery_val={{
-      "field": var('snowplow__partition_key'),
+      "field":  var("snowplow__partition_key"),
       "data_type": "timestamp"
     }}, databricks_val='collector_tstamp_date'),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
@@ -323,9 +323,9 @@ if user_urls is not None or user_flat_cols is not None:
     tags = "snowplow_normalize_incremental",
     materialized = "incremental",
     unique_key = "{user_alias}",
-    upsert_date_key = "latest_selected_tstamp",
+    upsert_date_key = "latest_collector_tstamp",
     partition_by = snowplow_utils.get_value_by_target_type(bigquery_val={{
-      "field": "latest_selected_tstamp",
+      "field": "latest_collector_tstamp",
       "data_type": "timestamp"
     }}, databricks_val='latest_collector_tstamp_date'),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
