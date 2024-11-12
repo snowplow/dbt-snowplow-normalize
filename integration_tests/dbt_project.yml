@@ -23,7 +23,7 @@ clean-targets:
 quoting:
   identifier: false
   schema: false
-  database: "{{ true if target.type in ['bigquery'] else false }}"
+  database: "{{ true if target.type in ['bigquery','databricks'] else false }}"
 
 
 
