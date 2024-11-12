@@ -63,7 +63,7 @@ on-run-end:
 models:
   snowplow_normalize:
     +materialized: table
-    +file_format: iceberg
+    +file_format:  "{{ 'delta' if target.type not in ['spark'] else 'iceberg'}}"
     +bind: false
     base:
       manifest:
