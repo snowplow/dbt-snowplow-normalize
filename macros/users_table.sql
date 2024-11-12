@@ -167,7 +167,7 @@ where
     rn = 1
 {% endmacro %}
 
-{% macro databricks__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], user_id_alias = 'user_id', flat_cols = [], remove_new_event_check = false) %}
+{% macro spark__users_table(user_id_field = 'user_id', user_id_sde = '', user_id_context = '', user_cols = [], user_keys = [], user_types = [], user_id_alias = 'user_id', flat_cols = [], remove_new_event_check = false) %}
 {# Remove down to major version for Databricks columns, drop 2 last _X values #}
 {%- set user_cols_clean = [] -%}
 {%- for ind in range(user_cols|length) -%}

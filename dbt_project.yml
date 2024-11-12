@@ -63,7 +63,7 @@ on-run-end:
 models:
   snowplow_normalize:
     +materialized: table
-    +file_format: delta
+    +file_format: iceberg
     +bind: false
     base:
       manifest:

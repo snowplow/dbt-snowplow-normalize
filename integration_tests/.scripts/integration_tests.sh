@@ -10,7 +10,7 @@ do
   esac
 done
 
-declare -a SUPPORTED_DATABASES=("bigquery" "databricks" "snowflake")
+declare -a SUPPORTED_DATABASES=("bigquery" "databricks" "snowflake", "spark_iceberg")
 
 # set to lower case
 DATABASE="$(echo $DATABASE | tr '[:upper:]' '[:lower:]')"
@@ -23,7 +23,7 @@ fi
 
 for db in ${DATABASES[@]}; do
 
-  if  [ $db == 'bigquery' ]; then
+  if  [ $db in ['bigquery','spark_iceberg'] ]; then
     echo "Snowplow web integration tests: Seeding data and doing first run"
 
     eval "dbt seed --target $db --full-refresh" || exit 1;
