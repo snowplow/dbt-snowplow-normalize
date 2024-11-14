@@ -38,7 +38,7 @@ with prep AS (
       and a.derived_tstamp <= {{ upper_limit }}
     {% endif %}
     and {{ snowplow_utils.app_id_filter(var("snowplow__app_id",[])) }}
-  -- We are doing the branching in order not to do the qualify in the case of spark, as it does not support it
+  {# We are doing the branching in order not to do the qualify in the case of spark, as it does not support it #}
   {% if target.type in ['databricks','snowflake','bigquery'] %}
   qualify row_number() over (partition by a.event_id order by a.collector_tstamp{% if target.type in ['databricks', 'spark'] -%}, a.etl_tstamp {%- endif %}) = 1
   {% endif %}
