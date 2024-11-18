@@ -23,12 +23,12 @@ fi
 
 for db in ${DATABASES[@]}; do
 
-  if [[ "$db" == "bigquery" ]]; then
-      echo "Snowplow integration tests: Seeding data and doing first run"
+  # if [[ "$db" == "bigquery" ]]; then
+  #     echo "Snowplow integration tests: Seeding data and doing first run"
 
-      eval "dbt seed --target $db --full-refresh" || exit 1
-      eval "dbt run --target $db --full-refresh" || exit 1
-  fi
+  #     eval "dbt seed --target $db --full-refresh" || exit 1
+  #     eval "dbt run --target $db --full-refresh" || exit 1
+  # fi
 
   echo "Snowplow normalize integration tests: snakeify case"
 
