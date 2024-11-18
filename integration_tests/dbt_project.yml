@@ -34,7 +34,7 @@ vars:
     snowplow__backfill_limit_days: 2
     snowplow__derived_tstamp_partitioned: false
     snowplow__atomic_schema: "{{ target.schema ~ 'sp_normalize_int_test' }}"
-  snowplow__partition_key: "load_tstamp"
+  snowplow__partition_tstamp: "load_tstamp"
 
 models:
   snowplow_normalize_integration_tests:
