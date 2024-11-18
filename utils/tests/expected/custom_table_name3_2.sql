@@ -4,9 +4,9 @@
     unique_key = "event_id",
     upsert_date_key = "collector_tstamp",
     partition_by = snowplow_utils.get_value_by_target_type(bigquery_val={
-      "field": "collector_tstamp",
+      "field":  var("snowplow__partition_key"),
       "data_type": "timestamp"
-    }, databricks_val='collector_tstamp_date'),
+    }, databricks_val=databricks_partition()),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
     tblproperties={
       'delta.autoOptimize.optimizeWrite' : 'true',
