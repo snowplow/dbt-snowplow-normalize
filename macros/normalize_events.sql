@@ -195,7 +195,7 @@ select
     event_id
     , collector_tstamp
     {% if target.type in ['databricks', 'spark'] -%}
-    , DATE(collector_tstamp) as collector_tstamp_date
+    , DATE({{var("snowplow__partition_tstamp")}}) as {{var("snowplow__partition_tstamp")}}_date
     {%- endif %}
     -- Flat columns from event table
     {% if flat_cols|length > 0 %}
