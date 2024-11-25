@@ -65,15 +65,26 @@ where
 
 
 {% macro bigquery__normalize_events(event_names, flat_cols = [], sde_cols = [], sde_keys = [], sde_types = [], sde_aliases = [], context_cols = [], context_keys = [], context_types = [], context_aliases = [], remove_new_event_check = false) %}
-{# Remove down to major version for bigquery combine columns macro, drop 2 last _X values #}
-{%- set sde_cols_clean = [] -%}
-{%- for ind in range(sde_cols|length) -%}
-    {% do sde_cols_clean.append('_'.join(sde_cols[ind].split('_')[:-2])) -%}
-{%- endfor -%}
-{%- set context_cols_clean = [] -%}
-{%- for ind in range(context_cols|length) -%}
-    {% do context_cols_clean.append('_'.join(context_cols[ind].split('_')[:-2])) -%}
-{%- endfor -%}
+{# Handle both versioned and unversioned column names #}
+{# Handle both versioned and unversioned column names #}
+    {%- set version_pattern = '_(([0-9]+_)?[0-9]+)$' -%}
+    {%- set sde_cols_clean = [] -%}
+    {%- for col in sde_cols -%}
+        {%- if col is regex_match(version_pattern) -%}
+            {% do sde_cols_clean.append(col|regex_replace(version_pattern, '')) -%}
+        {%- else -%}
+            {% do sde_cols_clean.append(col) -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {%- set context_cols_clean = [] -%}
+    {%- for col in context_cols -%}
+        {%- if col is regex_match(version_pattern) -%}
+            {% do context_cols_clean.append(col|regex_replace(version_pattern, '')) -%}
+        {%- else -%}
+            {% do context_cols_clean.append(col) -%}
+        {%- endif -%}
+    {%- endfor -%}
 
 {# Replace keys with snake_case where needed #}
 {%- set sde_keys_clean = [] -%}
