@@ -73,3 +73,5 @@ macros:
       - name: text
         type: string
         description: the text to convert to snakecase
+  - name: rename_partition_tstamp_date
+    description: Takes the partition_tstamp column and renames it to add the date suffix, currently only used in Databricks
