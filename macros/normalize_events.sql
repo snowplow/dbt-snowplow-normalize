@@ -65,27 +65,22 @@ where
 
 
 {% macro bigquery__normalize_events(event_names, flat_cols = [], sde_cols = [], sde_keys = [], sde_types = [], sde_aliases = [], context_cols = [], context_keys = [], context_types = [], context_aliases = [], remove_new_event_check = false) %}
-{# Handle both versioned and unversioned column names #}
-{# Handle both versioned and unversioned column names #}
-    {%- set version_pattern = '_(([0-9]+_)?[0-9]+)$' -%}
+    {# Handle both versioned and unversioned column names #}
+    {%- set re = modules.re -%}
+    {%- set version_pattern = '_[0-9]+(_[0-9]+)?$' -%}
+
     {%- set sde_cols_clean = [] -%}
     {%- for col in sde_cols -%}
-        {%- if col is regex_match(version_pattern) -%}
-            {% do sde_cols_clean.append(col|regex_replace(version_pattern, '')) -%}
-        {%- else -%}
-            {% do sde_cols_clean.append(col) -%}
-        {%- endif -%}
+        {# Get the base name for combine_column_versions to work with #}
+        {%- set clean_name = re.sub(version_pattern, '', col) -%}
+        {% do sde_cols_clean.append(clean_name) -%}
     {%- endfor -%}
 
     {%- set context_cols_clean = [] -%}
     {%- for col in context_cols -%}
-        {%- if col is regex_match(version_pattern) -%}
-            {% do context_cols_clean.append(col|regex_replace(version_pattern, '')) -%}
-        {%- else -%}
-            {% do context_cols_clean.append(col) -%}
-        {%- endif -%}
+        {%- set clean_name = re.sub(version_pattern, '', col) -%}
+        {% do context_cols_clean.append(clean_name) -%}
     {%- endfor -%}
-
 {# Replace keys with snake_case where needed #}
 {%- set sde_keys_clean = [] -%}
 {%- set context_keys_clean = [] -%}
@@ -97,7 +92,6 @@ where
     {%- endfor -%}
     {% do sde_keys_clean.append(sde_key_clean) -%}
 {%- endfor -%}
-
 {%- for ind1 in range(context_keys|length) -%}
     {%- set context_key_clean = [] -%}
     {%- for ind2 in range(context_keys[ind1]|length) -%}
@@ -130,10 +124,10 @@ select
                 {%- set required_aliases = sde_keys_clean[col_ind] -%}
             {%- endif -%}
             {%- set sde_col_list = snowplow_utils.combine_column_versions(
-                                        relation=ref('snowplow_normalize_base_events_this_run'),
-                                        column_prefix=col.lower(),
-                                        required_fields = zip(sde_keys_clean[col_ind], required_aliases)
-                                        ) -%}
+                relation=ref('snowplow_normalize_base_events_this_run'),
+                column_prefix=col.lower(),
+                required_fields = zip(sde_keys_clean[col_ind], required_aliases)
+            ) -%}
             {%- for field, key_ind in zip(sde_col_list, range(sde_col_list|length)) -%} {# Loop over each key within the column, appling the bespoke alias as needed #}
                 , {{field}}
             {% endfor -%}
