@@ -184,7 +184,7 @@ where
     {%- endif -%}
 {% endmacro %}
 
-{% macro databricks__normalize_events(event_names, flat_cols = [], sde_cols = [], sde_keys = [], sde_types = [], sde_aliases = [], context_cols = [], context_keys = [], context_types = [], context_aliases = [], remove_new_event_check = false) %}
+{% macro spark__normalize_events(event_names, flat_cols = [], sde_cols = [], sde_keys = [], sde_types = [], sde_aliases = [], context_cols = [], context_keys = [], context_types = [], context_aliases = [], remove_new_event_check = false) %}
 {# Remove down to major version for Databricks columns, drop 2 last _X values #}
 {%- set sde_cols_clean = [] -%}
 {%- for ind in range(sde_cols|length) -%}
@@ -220,7 +220,7 @@ select
     event_id
     , collector_tstamp
     {% if target.type in ['databricks', 'spark'] -%}
-    , DATE(collector_tstamp) as collector_tstamp_date
+    , DATE({{var("snowplow__partition_tstamp")}}) as {{var("snowplow__partition_tstamp")}}_date
     {%- endif %}
     -- Flat columns from event table
     {% if flat_cols|length > 0 %}

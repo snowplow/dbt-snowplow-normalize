@@ -195,11 +195,11 @@ for i in range(len(event_names)):
     tags = "snowplow_normalize_incremental",
     materialized = "incremental",
     unique_key = "event_id",
-    upsert_date_key = "collector_tstamp",
+    upsert_date_key = var("snowplow__partition_tstamp"),
     partition_by = snowplow_utils.get_value_by_target_type(bigquery_val={{
-      "field": "collector_tstamp",
+      "field":  var("snowplow__partition_tstamp"),
       "data_type": "timestamp"
-    }}, databricks_val='collector_tstamp_date'),
+    }}, databricks_val=rename_partition_tstamp_date()),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
     tblproperties={{
       'delta.autoOptimize.optimizeWrite' : 'true',
@@ -251,11 +251,11 @@ if filtered_events_table_name is not None:
     tags = "snowplow_normalize_incremental",
     materialized = "incremental",
     unique_key = "unique_id",
-    upsert_date_key = "collector_tstamp",
+    upsert_date_key = var("snowplow__partition_tstamp"),
     partition_by = snowplow_utils.get_value_by_target_type(bigquery_val={{
-      "field": "collector_tstamp",
+      "field":  var("snowplow__partition_tstamp"),
       "data_type": "timestamp"
-    }}, databricks_val='collector_tstamp_date'),
+    }}, databricks_val=rename_partition_tstamp_date()),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
     tblproperties={{
       'delta.autoOptimize.optimizeWrite' : 'true',
@@ -270,9 +270,9 @@ if filtered_events_table_name is not None:
         filtered_model_content += f"""
 select
     event_id
-    , collector_tstamp
+    , {{{{var("snowplow__partition_tstamp")}}}}
     {{% if target.type in ['databricks', 'spark'] -%}}
-    , DATE(collector_tstamp) as collector_tstamp_date
+    , DATE({{{{var("snowplow__partition_tstamp")}}}}) as {{{{var("snowplow__partition_tstamp")}}}}_date
     {{%- endif %}}
     , event_name
     , '{model}' as event_table_name

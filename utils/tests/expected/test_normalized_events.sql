@@ -2,11 +2,11 @@
     tags = "snowplow_normalize_incremental",
     materialized = "incremental",
     unique_key = "unique_id",
-    upsert_date_key = "collector_tstamp",
+    upsert_date_key = var("snowplow__partition_tstamp"),
     partition_by = snowplow_utils.get_value_by_target_type(bigquery_val={
-      "field": "collector_tstamp",
+      "field":  var("snowplow__partition_tstamp"),
       "data_type": "timestamp"
-    }, databricks_val='collector_tstamp_date'),
+    }, databricks_val=rename_partition_tstamp_date()),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
     tblproperties={
       'delta.autoOptimize.optimizeWrite' : 'true',
@@ -17,9 +17,9 @@
 
 select
     event_id
-    , collector_tstamp
+    , {{var("snowplow__partition_tstamp")}}
     {% if target.type in ['databricks', 'spark'] -%}
-    , DATE(collector_tstamp) as collector_tstamp_date
+    , DATE({{var("snowplow__partition_tstamp")}}) as {{var("snowplow__partition_tstamp")}}_date
     {%- endif %}
     , event_name
     , 'itsaprefix_event_name1_1' as event_table_name
@@ -34,9 +34,9 @@ UNION ALL
 
 select
     event_id
-    , collector_tstamp
+    , {{var("snowplow__partition_tstamp")}}
     {% if target.type in ['databricks', 'spark'] -%}
-    , DATE(collector_tstamp) as collector_tstamp_date
+    , DATE({{var("snowplow__partition_tstamp")}}) as {{var("snowplow__partition_tstamp")}}_date
     {%- endif %}
     , event_name
     , 'custom_table_name2_1' as event_table_name
@@ -51,9 +51,9 @@ UNION ALL
 
 select
     event_id
-    , collector_tstamp
+    , {{var("snowplow__partition_tstamp")}}
     {% if target.type in ['databricks', 'spark'] -%}
-    , DATE(collector_tstamp) as collector_tstamp_date
+    , DATE({{var("snowplow__partition_tstamp")}}) as {{var("snowplow__partition_tstamp")}}_date
     {%- endif %}
     , event_name
     , 'custom_table_name3_2' as event_table_name
@@ -68,9 +68,9 @@ UNION ALL
 
 select
     event_id
-    , collector_tstamp
+    , {{var("snowplow__partition_tstamp")}}
     {% if target.type in ['databricks', 'spark'] -%}
-    , DATE(collector_tstamp) as collector_tstamp_date
+    , DATE({{var("snowplow__partition_tstamp")}}) as {{var("snowplow__partition_tstamp")}}_date
     {%- endif %}
     , event_name
     , 'custom_table_name4_1' as event_table_name
@@ -85,9 +85,9 @@ UNION ALL
 
 select
     event_id
-    , collector_tstamp
+    , {{var("snowplow__partition_tstamp")}}
     {% if target.type in ['databricks', 'spark'] -%}
-    , DATE(collector_tstamp) as collector_tstamp_date
+    , DATE({{var("snowplow__partition_tstamp")}}) as {{var("snowplow__partition_tstamp")}}_date
     {%- endif %}
     , event_name
     , 'custom_table_name5_9' as event_table_name
@@ -102,9 +102,9 @@ UNION ALL
 
 select
     event_id
-    , collector_tstamp
+    , {{var("snowplow__partition_tstamp")}}
     {% if target.type in ['databricks', 'spark'] -%}
-    , DATE(collector_tstamp) as collector_tstamp_date
+    , DATE({{var("snowplow__partition_tstamp")}}) as {{var("snowplow__partition_tstamp")}}_date
     {%- endif %}
     , event_name
     , 'custom_table_name6_6' as event_table_name
@@ -119,9 +119,9 @@ UNION ALL
 
 select
     event_id
-    , collector_tstamp
+    , {{var("snowplow__partition_tstamp")}}
     {% if target.type in ['databricks', 'spark'] -%}
-    , DATE(collector_tstamp) as collector_tstamp_date
+    , DATE({{var("snowplow__partition_tstamp")}}) as {{var("snowplow__partition_tstamp")}}_date
     {%- endif %}
     , event_name
     , 'custom_table_name7_6' as event_table_name
