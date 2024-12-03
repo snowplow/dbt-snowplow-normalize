@@ -65,16 +65,42 @@ where
 
 
 {% macro bigquery__normalize_events(event_names, flat_cols = [], sde_cols = [], sde_keys = [], sde_types = [], sde_aliases = [], context_cols = [], context_keys = [], context_types = [], context_aliases = [], remove_new_event_check = false) %}
-{# Remove down to major version for bigquery combine columns macro, drop 2 last _X values #}
-{%- set sde_cols_clean = [] -%}
-{%- for ind in range(sde_cols|length) -%}
-    {% do sde_cols_clean.append('_'.join(sde_cols[ind].split('_')[:-2])) -%}
-{%- endfor -%}
-{%- set context_cols_clean = [] -%}
-{%- for ind in range(context_cols|length) -%}
-    {% do context_cols_clean.append('_'.join(context_cols[ind].split('_')[:-2])) -%}
-{%- endfor -%}
+    {# Handle both versioned and unversioned column names #}
+    {%- set re = modules.re -%}
 
+    {# 
+        This regex pattern handles column versioning in Snowplow contexts and self-describing events.
+        It specifically targets three-part semantic versions (e.g., field_1_2_3) while preserving
+        one-part (field_1) and two-part (field_1_2) versions.
+
+        Pattern breakdown: '(_\\d+)_\\d+_\\d+$'
+        - (_\\d+)    : Capture group that matches an underscore followed by one or more digits
+                        This captures the major version number (e.g., "_1" in "field_1_2_3")
+        - _\\d+      : Matches an underscore and one or more digits (minor version)
+        - _\\d+      : Matches an underscore and one or more digits (patch version)
+        - $          : Ensures the pattern only matches at the end of the string
+
+        The replacement pattern '\\1' keeps only the captured major version.
+
+        Examples:
+        - field_1     -> field_1     (no change - only has major version)
+        - field_1_2   -> field_1_2   (no change - has major and minor versions)
+        - field_1_2_3 -> field_1     (transforms - removes minor and patch versions)
+    #}
+    {%- set version_pattern = '(_\\d+)_\\d+_\\d+$' -%}
+
+    {%- set sde_cols_clean = [] -%}
+    {%- for col in sde_cols -%}
+        {# Get the base name for combine_column_versions to work with #}
+        {%- set clean_name = re.sub(version_pattern, '\\1', col) -%}
+        {% do sde_cols_clean.append(clean_name) -%}
+    {%- endfor -%}
+
+    {%- set context_cols_clean = [] -%}
+    {%- for col in context_cols -%}
+        {%- set clean_name = re.sub(version_pattern, '\\1', col) -%}
+        {% do context_cols_clean.append(clean_name) -%}
+    {%- endfor -%}
 {# Replace keys with snake_case where needed #}
 {%- set sde_keys_clean = [] -%}
 {%- set context_keys_clean = [] -%}
@@ -86,7 +112,6 @@ where
     {%- endfor -%}
     {% do sde_keys_clean.append(sde_key_clean) -%}
 {%- endfor -%}
-
 {%- for ind1 in range(context_keys|length) -%}
     {%- set context_key_clean = [] -%}
     {%- for ind2 in range(context_keys[ind1]|length) -%}
@@ -119,10 +144,10 @@ select
                 {%- set required_aliases = sde_keys_clean[col_ind] -%}
             {%- endif -%}
             {%- set sde_col_list = snowplow_utils.combine_column_versions(
-                                        relation=ref('snowplow_normalize_base_events_this_run'),
-                                        column_prefix=col.lower(),
-                                        required_fields = zip(sde_keys_clean[col_ind], required_aliases)
-                                        ) -%}
+                relation=ref('snowplow_normalize_base_events_this_run'),
+                column_prefix=col.lower(),
+                required_fields = zip(sde_keys_clean[col_ind], required_aliases)
+            ) -%}
             {%- for field, key_ind in zip(sde_col_list, range(sde_col_list|length)) -%} {# Loop over each key within the column, appling the bespoke alias as needed #}
                 , {{field}}
             {% endfor -%}
