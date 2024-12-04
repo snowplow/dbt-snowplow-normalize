@@ -1,3 +1,24 @@
+Snowplow Normalize 0.4.0 (2024-12-04)
+---------------------------------------
+## Summary
+This version adds new features including Apache Spark with Iceberg support, flexible timestamp partitioning, and compatibility with the new BigQuery loader naming conventions.
+
+## Features
+- Added support for Apache Spark with Iceberg
+- Introduced configurable partition timestamp column name for derived tables
+- Added compatibility with new BigQuery loader naming conventions
+
+## Upgrading
+To upgrade simply bump the snowplow-normalize version in your `packages.yml` file.
+
+If you want to start using the new partition timestamp feature, you can configure the column name in your project configuration:
+```yaml
+vars:
+  snowplow__partition_tstamp: your_custom_column_name
+```
+
+You have to be sure that the field you add is included in the table, and you do a full refresh.
+
 Snowplow Normalize 0.3.5 (2024-03-18)
 ---------------------------------------
 ## Summary
