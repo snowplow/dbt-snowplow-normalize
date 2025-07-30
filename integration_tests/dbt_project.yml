@@ -28,6 +28,8 @@ quoting:
 
 
 vars:
+  snowplow__license_accepted: true
+  
   snowplow_normalize:
     snowplow__events: "{{ ref('snowplow_normalize_stg') }}"
     snowplow__start_date: "2022-10-01"
