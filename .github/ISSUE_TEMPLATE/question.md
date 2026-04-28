@@ -1,6 +1,6 @@
 ---
 name: Question
-about: A more general question about the package. Consider using discourse if more applicable.
+about: A more general question about the package.
 title: ''
 labels: type:question
 assignees: ''

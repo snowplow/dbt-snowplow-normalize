@@ -13,12 +13,10 @@ analysis-paths: ["analysis"]
 test-paths: ["tests"]
 seed-paths: ["data"]
 macro-paths: ["macros"]
-
-target-path: "target"
 clean-targets:
-    - "target"
-    - "dbt_modules"
-    - "dbt_packages"
+  - "target"
+  - "dbt_modules"
+  - "dbt_packages"
 
 quoting:
   identifier: false
@@ -29,7 +27,7 @@ quoting:
 
 vars:
   snowplow__license_accepted: true
-  
+
   snowplow_normalize:
     snowplow__events: "{{ ref('snowplow_normalize_stg') }}"
     snowplow__start_date: "2022-10-01"
@@ -41,7 +39,6 @@ vars:
 models:
   snowplow_normalize_integration_tests:
     +materialized: table
-    bind: false
     +schema: "sp_normalize_int_test"
     dummy_model:
       bigquery:
@@ -53,8 +50,8 @@ models:
       spark:
         +enabled: "{{ target.type == 'spark' | as_bool() }}"
 
+    +bind: false
 seeds:
-  quote_columns: false
   snowplow_normalize_integration_tests:
     +schema: "int_data"
     source:
@@ -62,7 +59,7 @@ seeds:
         +column_types:
           event_name: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
           event_id: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
-          app_id:  "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+          app_id: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
           collector_tstamp: timestamp
           dvce_sent_tstamp: timestamp
           dvce_created_tstamp: timestamp
@@ -78,3 +75,6 @@ seeds:
           contexts_test2_1_0_4: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
           contexts_test2_1_0_5: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
           contexts_test4_1: "{{ 'string' if target.type in ['bigquery', 'databricks', 'spark'] else 'varchar' }}"
+  +quote_columns: false
+flags:
+  require_generic_test_arguments_property: true

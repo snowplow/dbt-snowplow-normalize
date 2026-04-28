@@ -2,7 +2,6 @@
     tags = "snowplow_normalize_incremental",
     materialized = "incremental",
     unique_key = "custom_user_id_alias",
-    upsert_date_key = "latest_collector_tstamp",
     partition_by = snowplow_utils.get_value_by_target_type(bigquery_val={
       "field": "latest_collector_tstamp",
       "data_type": "timestamp"
@@ -12,7 +11,7 @@
       'delta.autoOptimize.optimizeWrite' : 'true',
       'delta.autoOptimize.autoCompact' : 'true'
     },
-    snowplow_optimize=true
+    meta={'upsert_date_key': 'latest_collector_tstamp', 'snowplow_optimize': true}
 ) }}
 
 {%- set user_flat_cols = ['domain_userid', 'app_id', 'refr_urlpath'] -%}

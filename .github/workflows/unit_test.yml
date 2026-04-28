@@ -11,12 +11,12 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -25,9 +25,7 @@ jobs:
         pip install -r utils/requirements.txt
     - name: Test with pytest
       run: |
-        pip install pytest
-        pip install pytest-cov
-        pip install uuid
+        pip install pytest pytest-cov
         pytest utils/tests --doctest-modules --junitxml=junit/test-results.xml --cov=utils/functions --cov-report=xml:junit/coverage.xml
     - name: Pytest coverage comment
       uses: MishaKav/pytest-coverage-comment@main
