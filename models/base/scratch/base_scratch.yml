@@ -25,11 +25,12 @@ models:
         description: '{{ doc("col_event") }}'
       - name: event_id
         description: '{{ doc("col_event_id") }}'
-        tags:
-          - primary-key
         tests:
           - unique
           - not_null
+        config:
+          tags:
+            - primary-key
       - name: txn_id
         description: '{{ doc("col_txn_id") }}'
       - name: name_tracker

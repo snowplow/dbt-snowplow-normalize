@@ -5,34 +5,34 @@ macros:
     description: A macro to produce a table from `base_events_this_run` with the input columns, for a single event type
     arguments:
       - name: event_names
-        type: array
+        type: list
         description: List of names of the events this table will be filtered to
       - name: flat_cols
-        type: array
+        type: list
         description: List of standard columns from the atomic.events table to include
       - name: sde_cols
         type: string
         description: Column names for the self-describing event to pull attributes from
       - name: sde_keys
-        type: array
+        type: list
         description: List of list of  keys/column names within the self describing event column to include
       - name: sde_types
-        type: array
+        type: list
         description: List of list of types of the values of the keys within the self describing event column (only used in Snowflake)
       - name: sde_aliases
-        type: array
+        type: list
         description: List of prefixes to apply to the respective context column keys to be used as final column names
       - name: context_cols
-        type: array
+        type: list
         description: List of context columns from the atomic.events table to include
       - name: context_keys
-        type: array of arrays
+        type: list[list]
         description: List of lists of keys/column names within the respective context column to include
       - name: context_types
-        type: array of arrays
+        type: list[list]
         description: List of list of types of the values of the keys within the respective context column (only used in Snowflake)
       - name: context_aliases
-        type: array
+        type: list
         description: List of prefixes to apply to the respective context column keys to be used as final column names
       - name: remove_new_event_check
         type: boolean
@@ -50,19 +50,19 @@ macros:
         type: string
         description: The name of the context column that contains the user_id_field, not used if user_id_sde is also provided
       - name: user_cols
-        type: array
+        type: list
         description: List of (user related) context columns from the atomic.events table to include
       - name: user_keys
-        type: array of arrays
+        type: list[list]
         description: List of lists of keys/column names within the respective user context column to include
       - name: user_types
-        type: array of arrays
+        type: list[list]
         description: List of list of types of the values of the keys within the respective user context column (only used in Snowflake)
       - name: user_id_alias
         type: string
         description: The alias to apply to the user_id_field to help avoid clashes. Must match the unique key in the config
       - name: flat_cols
-        type: array
+        type: list
         description: List of (user related) flat columns from the atomic.events table to include
       - name: remove_new_event_check
         type: boolean

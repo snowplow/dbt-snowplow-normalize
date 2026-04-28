@@ -6,10 +6,11 @@ models:
     columns:
       - name: model
         description: The name of the model.
-        tags:
-          - primary-key
         tests:
           - unique
           - not_null
+        config:
+          tags:
+            - primary-key
       - name: last_success
         description: The latest event consumed by the model, based on `collector_tstamp`
