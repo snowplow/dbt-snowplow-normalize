@@ -114,8 +114,8 @@ else:
     user_id_context = ""
 
 # Set defaults if they don't exist
-validate_schemas = config.get("config").get("overwrite") or True
-overwrite = config.get("config").get("overwrite") or True
+validate_schemas = config.get("config").get("validate_schemas", True)
+overwrite = config.get("config").get("overwrite", True)
 resolver_file_path = config.get("config").get("resolver_file_path")
 models_folder = (
     config.get("config").get("models_folder") or "snowplow_normalized_events"
@@ -124,6 +124,7 @@ user_table_name = (
     config.get("config").get("users_table_name") or "snowplow_events_users"
 )
 models_prefix = config.get("config").get("models_prefix") or "snowplow"
+
 
 # Run Cleanup if required
 if args.cleanUp:
