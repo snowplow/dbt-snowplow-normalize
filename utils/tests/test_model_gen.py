@@ -6,14 +6,14 @@ from os import system
 import string
 from utils.functions.snowplow_model_gen_funcs import *
 
-def pop2(list, i):
-    list.pop(i)
-    return list
+def pop2(lst, i):
+    lst.pop(i)
+    return lst
 
-def pop3(list, i):
+def pop3(lst, i):
     for j in i:
-        list.pop(j)
-    return list
+        lst.pop(j)
+    return lst
 
 def compare(s1, s2):
     #https://stackoverflow.com/a/69564731
@@ -78,7 +78,7 @@ class Test_clashing_user_id:
 
 class Test_types:
     def test_get_types(self):
-        input = {'properties': {
+        test_input = {'properties': {
             'col1': {'type': ['null', 'number']}, # 2 types including null
             'col2': {'type': "number"}, # single type
             'col3': {'type': "ARRAY"}, #capitilisation
@@ -92,7 +92,7 @@ class Test_types:
         }
         output = ['number', 'number', 'array', 'string', 'number', 'number', 'string', 'boolean', 'integer']
 
-        assert get_types(input) == output
+        assert get_types(test_input) == output
 
     def test_get_types_raises(self):
         with pytest.raises(ValueError):
@@ -174,7 +174,7 @@ class Test_parse_schema_url:
 
     def test_not_found(self):
         with pytest.raises(ValueError):
-            parsed_url = parse_schema_url('iglu:com.demo2/extra_event/jsonschema/1-0-0',
+            parse_schema_url('iglu:com.demo2/extra_event/jsonschema/1-0-0',
             {'https://com-demo-private.net': ['iglu:com.demo/example_event_priv/jsonschema/1-0-0', 'iglu:com.demo2/test_event_priv/jsonschema/1-0-0'], 'http://iglucentral.com': ['iglu:com.demo/example_event_pub/jsonschema/1-0-0', 'iglu:com.demo2/test_event_pub/jsonschema/1-0-0']},
             {'iglucentral.com': None, 'com-demo-private.net': 'demo-key'})
 
@@ -366,7 +366,7 @@ class Test_cleanup_models:
 
     # Keep all files in faked config input, expect none to delete
     def test_none_to_del(self, setup_teardown, capfd):
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit) as _:
             cleanup_models(
                 event_names = setup_teardown.get('event_names'),
                 sde_urls = setup_teardown.get('sde_urls'),
@@ -393,7 +393,7 @@ class Test_cleanup_models:
         # monkeypatch the "input" function, so that it returns "n".
         # This simulates the user entering "n" in the terminal:
         monkeypatch.setattr('builtins.input', lambda _: "n")
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit) as _:
             cleanup_models(
                 event_names = pop2(setup_teardown.get('event_names'), 0),
                 sde_urls = pop2(setup_teardown.get('sde_urls'), 0),
@@ -421,7 +421,7 @@ class Test_cleanup_models:
         # monkeypatch the "input" function, so that it returns "n".
         # This simulates the user entering "n" in the terminal:
         monkeypatch.setattr('builtins.input', lambda _: "n")
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit) as _:
             cleanup_models(
                 event_names = pop3(setup_teardown.get('event_names'), [0, 4, 8, 12]),
                 sde_urls = pop3(setup_teardown.get('sde_urls'), [0, 4, 8, 12]),
@@ -447,7 +447,7 @@ class Test_cleanup_models:
     # remove one file (named table), bad input, expect all files remain
     def test_decline_del_random(self, setup_teardown, monkeypatch, capfd):
         monkeypatch.setattr('builtins.input', lambda _: "3")
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit) as _:
             cleanup_models(
                 event_names = pop2(setup_teardown.get('event_names'), 0),
                 sde_urls = pop2(setup_teardown.get('sde_urls'), 0),
@@ -473,7 +473,7 @@ class Test_cleanup_models:
     # remove one file (named table), lowercase input, expect all files remain
     def test_decline_del_lowercase(self, setup_teardown, monkeypatch, capfd):
         monkeypatch.setattr('builtins.input', lambda _: "y")
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit) as _:
             cleanup_models(
                 event_names = pop2(setup_teardown.get('event_names'), 0),
                 sde_urls = pop2(setup_teardown.get('sde_urls'), 0),
@@ -500,7 +500,7 @@ class Test_cleanup_models:
     # Delete 1 of each "type" of input, adjust the pop value as it happens in series
     def test_accept_del_some(self, setup_teardown, monkeypatch, capfd):
         monkeypatch.setattr('builtins.input', lambda _: "Y")
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit) as _:
             cleanup_models(
                 event_names = pop3(setup_teardown.get('event_names'), [0, 4, 8, 12]),
                 sde_urls = pop3(setup_teardown.get('sde_urls'), [0, 4, 8, 12]),
@@ -526,7 +526,7 @@ class Test_cleanup_models:
     # rename filtered events table
     def test_accept_del_filtered(self, setup_teardown, monkeypatch, capfd):
         monkeypatch.setattr('builtins.input', lambda _: "Y")
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit) as _:
             cleanup_models(
                 event_names = setup_teardown.get('event_names'),
                 sde_urls = setup_teardown.get('sde_urls'),
@@ -552,7 +552,7 @@ class Test_cleanup_models:
     # rename the events table
     def test_accept_del_users(self, setup_teardown, monkeypatch, capfd):
         monkeypatch.setattr('builtins.input', lambda _: "Y")
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit) as _:
             cleanup_models(
                 event_names = setup_teardown.get('event_names'),
                 sde_urls = setup_teardown.get('sde_urls'),
@@ -578,7 +578,7 @@ class Test_cleanup_models:
     # Just delete everything to ensure it keeps the user custom models in the otehr folder
     def test_accept_del_all(self, setup_teardown, monkeypatch, capfd):
         monkeypatch.setattr('builtins.input', lambda _: "Y")
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with pytest.raises(SystemExit) as _:
             cleanup_models(
                 event_names = [],
                 sde_urls = [],
@@ -689,6 +689,8 @@ class Test_model_output:
 
         with open(os.path.join('utils', 'tests', 'expected', 'custom_table_name6_6.sql')) as file:
             expected = file.read()
+
+        assert compare(output, expected)
 
     def test_no_flat_cols(self, setup_teardown):
         with open(os.path.join('models', setup_teardown, 'custom_table_name7_6.sql')) as file:

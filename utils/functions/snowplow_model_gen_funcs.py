@@ -1,6 +1,7 @@
-from typing import Union
+from typing import Callable, Optional
 import warnings
 import jsonschema
+import jsonschema.exceptions
 import requests
 import os
 from urllib.parse import urlparse
@@ -8,7 +9,8 @@ import json
 import argparse
 import copy
 
-verboseprint = lambda *a, **k: None
+verboseprint: Callable[..., None] = lambda *a, **k: None
+
 
 def write_model_file(filename: str, model_code: str, overwrite: bool = True):
     """Write model code into a file
@@ -21,13 +23,14 @@ def write_model_file(filename: str, model_code: str, overwrite: bool = True):
         overwrite (bool): Overwrite the file if it already exists. Defaults to True
     """
     if not overwrite and os.path.exists(filename):
-        verboseprint(f'Model {filename} already exists, skipping...')
+        verboseprint(f"Model {filename} already exists, skipping...")
         pass
     else:
-        verboseprint(f'Writing file {filename} ...')
+        verboseprint(f"Writing file {filename} ...")
         os.makedirs(os.path.dirname(filename), exist_ok=True)
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             f.write(model_code)
+
 
 def get_types(jsonData: dict) -> list:
     """Get a list of types from a Snowplow schema
@@ -39,33 +42,52 @@ def get_types(jsonData: dict) -> list:
         list: A list of types for the properties in your schema
     """
     types = []
-    for val in jsonData['properties'].values():
-        if val.get('type') is not None:
-            cur_type = val.get('type')
+    for val in jsonData["properties"].values():
+        if val.get("type") is not None:
+            cur_type = val.get("type")
             # If it is a list get the max based on the hierarchy e.g. int and str would be str
-            types.append(max([cur_type.lower()] if isinstance(cur_type, str) else [type.lower() for type in cur_type], key = lambda x: type_hierarchy[x]))
-        elif val.get('enum') is not None:
+            types.append(
+                max(
+                    (
+                        [cur_type.lower()]
+                        if isinstance(cur_type, str)
+                        else [t.lower() for t in cur_type]
+                    ),
+                    key=lambda x: type_hierarchy[x],
+                )
+            )
+        elif val.get("enum") is not None:
             try:
                 # "Check" the type that is in the list of options
-                check_type = [float(option) for option in val.get('enum')]
-                types.append('number')
+                [float(option) for option in val.get("enum")]
+                types.append("number")
             except ValueError:
-                types.append('string')
+                types.append("string")
         else:
             # Should never reach here as we validated the JSON but just incase
             raise ValueError(f'Excpted one of "type" or "enum" in property {val}')
-    return [type if type != 'null' else 'boolean' for type in types] # Can't have a null type column, everything else exists in snowflake as is, not needed for other warehouses
+    return [
+        t if t != "null" else "boolean" for t in types
+    ]  # Can't have a null type column, everything else exists in snowflake as is, not needed for other warehouses
 
-def url_to_column(str: str) -> str:
+
+def url_to_column(url: str) -> str:
     """convert url string to database column format
 
     Args:
-        str (str): Input url
+        url (str): Input url
 
     Returns:
         str: Output column name cleaned of punctuation and replaced with underscores
     """
-    return str.upper().replace('/JSONSCHEMA', '', 1).replace('.', '_').replace('-', '_').replace('/', '_')
+    return (
+        url.upper()
+        .replace("/JSONSCHEMA", "", 1)
+        .replace(".", "_")
+        .replace("-", "_")
+        .replace("/", "_")
+    )
+
 
 def parse_schema_url(url: str, schemas_list: dict, repo_keys: dict) -> str:
     """Parse a schema URL and provide the true URL to GET request
@@ -82,19 +104,22 @@ def parse_schema_url(url: str, schemas_list: dict, repo_keys: dict) -> str:
         str: A true URL that a GET request can be sent to
     """
     parsed_url = urlparse(url)
-    if parsed_url.scheme == 'iglu':
-        verboseprint(f'Identifying registry for iglu schema {url} ...')
+    if parsed_url.scheme == "iglu":
+        verboseprint(f"Identifying registry for iglu schema {url} ...")
         for registry, schemas in schemas_list.items():
             if url in schemas:
-                schema_path = registry + '/schemas/' + parsed_url.path
-                return(schema_path)
-        raise ValueError(f'Schema {url} not found in any provided registry.')
-    elif parsed_url.scheme == 'http':
-        return(url)
+                schema_path = registry + "/schemas/" + parsed_url.path
+                return schema_path
+        raise ValueError(f"Schema {url} not found in any provided registry.")
+    elif parsed_url.scheme == "http":
+        return url
     else:
-        raise ValueError(f'Unexpected schema url scheme: {url} should be one of iglu, http.')
+        raise ValueError(
+            f"Unexpected schema url scheme: {url} should be one of iglu, http."
+        )
 
-def get_schema(url: str, repo_keys: dict) -> Union[dict, list]:
+
+def get_schema(url: str, repo_keys: dict) -> dict:
     """Return schema from url (using cache if available)
 
     Args:
@@ -106,21 +131,30 @@ def get_schema(url: str, repo_keys: dict) -> Union[dict, list]:
     """
     schema = schema_cache.get(url)
     if schema is None:
-        verboseprint(f'Fetching schema {url} ...')
+        verboseprint(f"Fetching schema {url} ...")
         parsed_url = urlparse(url)
         api_key = repo_keys.get(parsed_url.netloc)
         if api_key is None:
-            schema = requests.get(url).text
+            response = requests.get(url)
         else:
-            headers = {'apikey': api_key}
-            schema = requests.get(url, headers=headers).text
+            headers = {"apikey": api_key}
+            response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        schema = response.text
         schema_cache[url] = schema
     else:
-        verboseprint(f'Using cache for schema {url} ...')
+        verboseprint(f"Using cache for schema {url} ...")
     schema = json.loads(schema)
-    return(schema)
+    return schema
 
-def validate_json(jsonData: dict, schema: dict = None, validate: bool = True, schemas_list: dict = None, repo_keys: dict = None) -> bool:
+
+def validate_json(
+    jsonData: Optional[dict],
+    schema: Optional[dict] = None,
+    validate: bool = True,
+    schemas_list: Optional[dict] = None,
+    repo_keys: Optional[dict] = None,
+) -> bool:
     """Validates a JSON against a schema
 
     Args:
@@ -135,17 +169,23 @@ def validate_json(jsonData: dict, schema: dict = None, validate: bool = True, sc
     """
     json_copy = copy.deepcopy(jsonData)
     if validate:
-        verboseprint('Validating JSON structure...')
-        if schema is None: # Need to have passed a full JSON with scehma and self information
+        verboseprint("Validating JSON structure...")
+        if (
+            schema is None
+        ):  # Need to have passed a full JSON with scehma and self information
             if schemas_list is None or repo_keys is None:
-                raise ValueError('No schema provided, you must provide schema_list and repo_keys in this case.')
-            schema_url = json_copy.get('$schema') or json_copy.get('schema')
+                raise ValueError(
+                    "No schema provided, you must provide schema_list and repo_keys in this case."
+                )
+            schema_url = json_copy.get("$schema") or json_copy.get("schema")
             if schema_url is None:
-                raise ValueError(f'$schema not present in JSON and no schema provided to validate against.')
+                raise ValueError(
+                    f"$schema not present in JSON and no schema provided to validate against."
+                )
             parsed_schema = parse_schema_url(schema_url, schemas_list, repo_keys)
             schema = get_schema(parsed_schema, repo_keys)
-            if json_copy.get('schema') is not None:
-                json_copy = json_copy.get('data')
+            if json_copy.get("schema") is not None:
+                json_copy = json_copy.get("data") or json_copy
         try:
             jsonschema.validate(instance=json_copy, schema=schema)
         except jsonschema.exceptions.ValidationError as err:
@@ -156,7 +196,9 @@ def validate_json(jsonData: dict, schema: dict = None, validate: bool = True, sc
         return True
 
 
-def generate_names(event_names: list, sde_urls: list, versions: list, table_names: list, prefix: str) -> list:
+def generate_names(
+    event_names: list, sde_urls: list, versions: list, table_names: list, prefix: str
+) -> list:
     """Generate all event based model names from the values provided in the config file
 
     Args:
@@ -169,18 +211,46 @@ def generate_names(event_names: list, sde_urls: list, versions: list, table_name
     Returns:
         list: List of all model names that will be generated from events in the config file. Does not include the filtered table or users table.
     """
-    verboseprint('Generating table names...')
+    verboseprint("Generating table names...")
     # In the case of multiple sdes/event names, they will have provided a version and table name, so safe to always get the first element
-    sde_major_versions = [sde_url[0].split('-')[0][-1] if sde_url is not None and len(sde_url) == 1 else version if version is not None else '1' for sde_url, version in zip(sde_urls, versions)]
-    model_names = [event_name[0] + '_' + sde_major_version if table_name is None else table_name + '_' + sde_major_version
-                            for event_name, sde_major_version, table_name in zip(event_names, sde_major_versions, table_names)]
-    if prefix != '':
-        model_names = [prefix + '_' + name if custom_name is None else name for name, custom_name in zip(model_names, table_names)]
+    sde_major_versions = [
+        (
+            sde_url[0].split("-")[0][-1]
+            if sde_url is not None and len(sde_url) == 1
+            else version if version is not None else "1"
+        )
+        for sde_url, version in zip(sde_urls, versions)
+    ]
+    model_names = [
+        (
+            event_name[0] + "_" + sde_major_version
+            if table_name is None
+            else table_name + "_" + sde_major_version
+        )
+        for event_name, sde_major_version, table_name in zip(
+            event_names, sde_major_versions, table_names
+        )
+    ]
+    if prefix != "":
+        model_names = [
+            prefix + "_" + name if custom_name is None else name
+            for name, custom_name in zip(model_names, table_names)
+        ]
 
     return model_names
 
 
-def cleanup_models(event_names: list, sde_urls: list, versions: list, table_names: list, models_prefix: str, models_folder: str, user_table_name: str, filtered_events_table_name: str, dry_run: bool) -> None:
+def cleanup_models(
+    event_names: list,
+    sde_urls: list,
+    versions: list,
+    table_names: list,
+    models_prefix: str,
+    models_folder: str,
+    user_table_name: str,
+    filtered_events_table_name: str,
+    dry_run: bool,
+) -> None:
     """Clean up excess models not present in your config file and quit
 
     Args:
@@ -194,42 +264,87 @@ def cleanup_models(event_names: list, sde_urls: list, versions: list, table_name
         filtered_events_table_name (string): Name of your filtered events table from your config
         dry_run (boolean): Do as a dry run or not
     """
-    verboseprint('Starting cleanup...')
-    model_names = generate_names(event_names, sde_urls, versions, table_names, models_prefix)
+    verboseprint("Starting cleanup...")
+    model_names = generate_names(
+        event_names, sde_urls, versions, table_names, models_prefix
+    )
     if filtered_events_table_name is not None:
         model_names.extend([user_table_name, filtered_events_table_name])
     else:
         model_names.append(user_table_name)
 
-    cur_models = os.listdir(os.path.join('models', models_folder))
-    extra_models = set(cur_models).difference(set([model + '.sql' for model in model_names]))
+    cur_models = os.listdir(os.path.join("models", models_folder))
+    extra_models = set(cur_models).difference(
+        set([model + ".sql" for model in model_names])
+    )
     if len(extra_models) == 0:
-        print('No models to clean up, quitting...')
+        print("No models to clean up, quitting...")
         quit()
-    print(f'Cleanup will remove models: {extra_models}')
-    del_check = input('Confirm deletion of models (Y/n): ')
-    if del_check == 'Y' and not dry_run:
+    print(f"Cleanup will remove models: {extra_models}")
+    del_check = input("Confirm deletion of models (Y/n): ")
+    if del_check == "Y" and not dry_run:
         for model in extra_models:
-            verboseprint(f'Deleting file {model}...')
-            os.remove(os.path.join('models', models_folder, model))
-        print(f'Deleted {len(extra_models)} models, quitting...')
+            verboseprint(f"Deleting file {model}...")
+            os.remove(os.path.join("models", models_folder, model))
+        print(f"Deleted {len(extra_models)} models, quitting...")
         quit()
     else:
-        print('Models not deleted.')
+        print("Models not deleted.")
         quit()
 
-def parse_args(args: list):
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description = 'Produce dbt model files for normalizing your Snowplow events table into 1 table per event')
-    parser.add_argument('config', help = 'relative path to your configuration file')
-    parser.add_argument('--version', action='version',
-                        version='%(prog)s V0.2.1', help="show program's version number and exit")
-    parser.add_argument('-v', '--verbose', dest = 'verbose', action = 'store_true', default = False, help = 'verbose flag for the running of the tool')
-    parser.add_argument('--dryRun', dest = 'dryRun', action = 'store_true', default = False, help ='flag for a dry run (does not write/delete any files)')
-    parser.add_argument('--configHelp', dest = 'configHelp', action = 'version', version = config_help, help = 'prints information relating to the structure of the config file')
-    parser.add_argument('--cleanUp', dest = 'cleanUp', action = 'store_true', default = False, help = 'delete any models not present in your config and exit (no models will be generated)')
+
+def parse_args(args: list) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+        description="Produce dbt model files for normalizing your Snowplow events table into 1 table per event",
+    )
+    parser.add_argument("config", help="relative path to your configuration file")
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="%(prog)s V0.2.1",
+        help="show program's version number and exit",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="verbose flag for the running of the tool",
+    )
+    parser.add_argument(
+        "--dryRun",
+        dest="dryRun",
+        action="store_true",
+        default=False,
+        help="flag for a dry run (does not write/delete any files)",
+    )
+    parser.add_argument(
+        "--configHelp",
+        dest="configHelp",
+        action="version",
+        version=config_help,
+        help="prints information relating to the structure of the config file",
+    )
+    parser.add_argument(
+        "--cleanUp",
+        dest="cleanUp",
+        action="store_true",
+        default=False,
+        help="delete any models not present in your config and exit (no models will be generated)",
+    )
     return parser.parse_args(args)
 
-def get_cols_keys_types_aliases(urls: list, aliases: list, prefix: str, schemas_list: dict, repo_keys: dict, validate_schemas: bool) -> tuple:
+
+def get_cols_keys_types_aliases(
+    urls: Optional[list],
+    aliases: Optional[list],
+    prefix: str,
+    schemas_list: dict,
+    repo_keys: dict,
+    validate_schemas: bool,
+) -> tuple:
     """Get the columns, keys, types, and aliases for the sdes or contexts
 
     Args:
@@ -250,16 +365,24 @@ def get_cols_keys_types_aliases(urls: list, aliases: list, prefix: str, schemas_
     if urls is not None:
         # Parse the input URL then get parse and validate schemas for sde
         url_cut = [urlparse(url).path for url in urls]
-        jsons = [get_schema(parse_schema_url(url, schemas_list, repo_keys), repo_keys) for url in urls]
+        jsons = [
+            get_schema(parse_schema_url(url, schemas_list, repo_keys), repo_keys)
+            for url in urls
+        ]
         for i, sde_json in enumerate(jsons):
-            if not validate_json(sde_json, validate = validate_schemas, schemas_list = schemas_list, repo_keys = repo_keys):
-                raise ValueError(f'Validation of schema {urls[i]} failed.')
+            if not validate_json(
+                sde_json,
+                validate=validate_schemas,
+                schemas_list=schemas_list,
+                repo_keys=repo_keys,
+            ):
+                raise ValueError(f"Validation of schema {urls[i]} failed.")
         # Generate final form data for insert into model
         cols = [prefix + url_to_column(url) for url in url_cut]
-        keys = [list(sde.get('properties').keys()) for sde in jsons]
+        keys = [list((sde.get("properties") or {}).keys()) for sde in jsons]
         types = [get_types(sde) for sde in jsons]
         if aliases is None and len(urls) > 1:
-            aliases = [event.get('self').get('name') for event in jsons]
+            aliases = [event.get("self").get("name") for event in jsons]
     else:
         cols = None
         keys = None
@@ -281,13 +404,257 @@ type_hierarchy = {
     "number": 3,
     "array": 4,
     "object": 5,
-    "string": 6
+    "string": 6,
 }
 
 # Hard coded default resolver and schemas to use before we have checked the resolver is valid
-default_resolver = {"schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1", "data": {"cacheSize": 500, "repositories": [{"name": "Iglu Central", "priority": 0, "vendorPrefixes": [ "com.snowplowanalytics" ], "connection": {"http": {"uri": "http://iglucentral.com"}}}]}}
-resolver_schema = {"$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#", "self":{"vendor": "com.snowplowanalytics.iglu", "name": "resolver-config", "format": "jsonschema", "version": "1-0-3"}, "type": "object", "properties": {"cacheSize": {"type": "number"}, "cacheTtl": {"type": ["integer", "null"], "minimum": 0}, "repositories": {"type": "array", "items": {"type": "object", "properties": {"name": {"type": "string"}, "priority": {"type": "number"}, "vendorPrefixes": {"type": "array", "items": {"type": "string"}}, "connection": {"type": "object", "oneOf": [{"properties": {"embedded": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"], "additionalProperties":  False }}, "required": ["embedded"], "additionalProperties":  False}, {"properties": {"http": {"type": "object", "properties": {"uri": {"type": "string", "format": "uri"}, "apikey": {"type": ["string", "null"]}}, "required": [ "uri" ], "additionalProperties":  False } }, "required": [ "http" ], "additionalProperties":  False }]}}, "required": [ "name", "priority", "vendorPrefixes", "connection" ], "additionalProperties":  False }}}}
-config_schema = { "description": "Schema for the Snowplow dbt normalize python script configuration", "self": { "name": "normalize-config", "format": "jsonschema", "version": "2-1-0" }, "properties": { "config": { "type": "object", "properties": { "resolver_file_path": { "type": "string", "description": "relative path to your resolver config json, or 'default' to use iglucentral only" }, "filtered_events_table_name": { "type": "string", "description": "name of filtered events table, if not provided it will not be generated" }, "users_table_name": { "type": "string", "description": "name of users table, default events_users if user schema(s) provided" }, "validate_schemas": { "type": "boolean", "description": "if you want to validate schemas loaded from each iglu registry or not, default true" }, "overwrite": { "type": "boolean", "description": "overwrite existing model files or not, default true" }, "models_folder": { "type": "string", "description": "folder under models/ to place the models, default snowplow_normalized_events" }, "models_prefix": { "type": "string", "description": "prefix used for models when table_name is not provided, use '' for no prefix, default snowplow" } }, "required": [ "resolver_file_path" ], "additionalProperties": False }, "events": { "type": "array", "items": { "type": "object", "properties": { "event_names": { "type": "array", "items": { "type": "string", "minItems": 1 }, "description": "name(s) of the event type(s), value of the event_name column in your warehouse" }, "event_columns": { "type": "array", "items": { "type": "string" }, "description": "array of strings of flat column names from the events table to include in the model" }, "self_describing_event_schemas": { "type": "array", "items": { "type": "string" }, "description": "`iglu:com.` type url(s) for the self-describing event(s) to include in the model" }, "self_describing_event_aliases": { "type": "array", "items": { "type": "string" }, "description": "array of strings of prefixes to the column alias for self describing events" }, "context_schemas": { "type": "array", "items": { "type": "string" }, "description": "array of strings of `iglu:com.` type url(s) for the context/entities to include in the model" }, "context_aliases": { "type": "array", "items": { "type": "string" }, "description": "array of strings of prefixes to the column alias for context/entities" }, "table_name": { "type": "string", "description": "name of the model, default is the event_name" }, "version": { "type": "string", "minLength": 1, "maxLength": 1, "description": "version number to append to table name, if (one) self_describing_event_schema is provided uses major version number from that, default 1" } }, "if": { "properties": { "event_names": { "minItems": 2 } } }, "then": { "anyOf": [ { "required": [ "event_names", "self_describing_event_schemas", "version", "table_name" ] }, { "required": [ "event_names", "context_schemas", "version", "table_name" ] }, { "required": [ "event_names", "event_columns", "version", "table_name" ] } ] }, "else": { "anyOf": [ { "required": [ "event_names", "self_describing_event_schemas" ] }, { "required": [ "event_names", "context_schemas" ] }, { "required": [ "event_names", "event_columns" ] } ] }, "additionalProperties": False }, "minItems": 1 }, "users": { "type": "object", "properties": { "user_id": { "type": "object", "properties": { "id_column": { "type": "string", "description": "name of column or attribute in the schema that defines your user_id, will be converted to a string in Snowflake" }, "id_self_describing_event_schema": { "type": "string", "description": "`iglu:com.` type url for the self-describing event schema that your user_id column is in, used over id_context_schema if both provided" }, "id_context_schema": { "type": "string", "description": "`iglu:com.` type url for the context schema that your user_id column is in" }, "alias": { "type": "string", "description": "alias to apply to the id column" } }, "additionalProperties": False, "required": [ "id_column" ] }, "user_contexts": { "type": "array", "items": { "type": "string", "description": "array of strings of iglu:com. type url(s) for the context/entities to add to your users table as columns" } }, "user_columns": { "type": "array", "items": { "type": "string", "description": "array of strings of flat column names from the events table to include in the model" } } }, "anyOf" : [ {"required": [ "user_contexts" ]}, {"required": [ "user_columns" ]} ], "additionalProperties": False } }, "additionalProperties": False, "type": "object", "required": [ "config", "events" ]}
+default_resolver = {
+    "schema": "iglu:com.snowplowanalytics.iglu/resolver-config/jsonschema/1-0-1",
+    "data": {
+        "cacheSize": 500,
+        "repositories": [
+            {
+                "name": "Iglu Central",
+                "priority": 0,
+                "vendorPrefixes": ["com.snowplowanalytics"],
+                "connection": {"http": {"uri": "http://iglucentral.com"}},
+            }
+        ],
+    },
+}
+resolver_schema = {
+    "$schema": "http://iglucentral.com/schemas/com.snowplowanalytics.self-desc/schema/jsonschema/1-0-0#",
+    "self": {
+        "vendor": "com.snowplowanalytics.iglu",
+        "name": "resolver-config",
+        "format": "jsonschema",
+        "version": "1-0-3",
+    },
+    "type": "object",
+    "properties": {
+        "cacheSize": {"type": "number"},
+        "cacheTtl": {"type": ["integer", "null"], "minimum": 0},
+        "repositories": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "priority": {"type": "number"},
+                    "vendorPrefixes": {"type": "array", "items": {"type": "string"}},
+                    "connection": {
+                        "type": "object",
+                        "oneOf": [
+                            {
+                                "properties": {
+                                    "embedded": {
+                                        "type": "object",
+                                        "properties": {"path": {"type": "string"}},
+                                        "required": ["path"],
+                                        "additionalProperties": False,
+                                    }
+                                },
+                                "required": ["embedded"],
+                                "additionalProperties": False,
+                            },
+                            {
+                                "properties": {
+                                    "http": {
+                                        "type": "object",
+                                        "properties": {
+                                            "uri": {"type": "string", "format": "uri"},
+                                            "apikey": {"type": ["string", "null"]},
+                                        },
+                                        "required": ["uri"],
+                                        "additionalProperties": False,
+                                    }
+                                },
+                                "required": ["http"],
+                                "additionalProperties": False,
+                            },
+                        ],
+                    },
+                },
+                "required": ["name", "priority", "vendorPrefixes", "connection"],
+                "additionalProperties": False,
+            },
+        },
+    },
+}
+config_schema = {
+    "description": "Schema for the Snowplow dbt normalize python script configuration",
+    "self": {"name": "normalize-config", "format": "jsonschema", "version": "2-1-0"},
+    "properties": {
+        "config": {
+            "type": "object",
+            "properties": {
+                "resolver_file_path": {
+                    "type": "string",
+                    "description": "relative path to your resolver config json, or 'default' to use iglucentral only",
+                },
+                "filtered_events_table_name": {
+                    "type": "string",
+                    "description": "name of filtered events table, if not provided it will not be generated",
+                },
+                "users_table_name": {
+                    "type": "string",
+                    "description": "name of users table, default events_users if user schema(s) provided",
+                },
+                "validate_schemas": {
+                    "type": "boolean",
+                    "description": "if you want to validate schemas loaded from each iglu registry or not, default true",
+                },
+                "overwrite": {
+                    "type": "boolean",
+                    "description": "overwrite existing model files or not, default true",
+                },
+                "models_folder": {
+                    "type": "string",
+                    "description": "folder under models/ to place the models, default snowplow_normalized_events",
+                },
+                "models_prefix": {
+                    "type": "string",
+                    "description": "prefix used for models when table_name is not provided, use '' for no prefix, default snowplow",
+                },
+            },
+            "required": ["resolver_file_path"],
+            "additionalProperties": False,
+        },
+        "events": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "event_names": {
+                        "type": "array",
+                        "items": {"type": "string", "minItems": 1},
+                        "description": "name(s) of the event type(s), value of the event_name column in your warehouse",
+                    },
+                    "event_columns": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "array of strings of flat column names from the events table to include in the model",
+                    },
+                    "self_describing_event_schemas": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "`iglu:com.` type url(s) for the self-describing event(s) to include in the model",
+                    },
+                    "self_describing_event_aliases": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "array of strings of prefixes to the column alias for self describing events",
+                    },
+                    "context_schemas": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "array of strings of `iglu:com.` type url(s) for the context/entities to include in the model",
+                    },
+                    "context_aliases": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "array of strings of prefixes to the column alias for context/entities",
+                    },
+                    "table_name": {
+                        "type": "string",
+                        "description": "name of the model, default is the event_name",
+                    },
+                    "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1,
+                        "description": "version number to append to table name, if (one) self_describing_event_schema is provided uses major version number from that, default 1",
+                    },
+                },
+                "if": {"properties": {"event_names": {"minItems": 2}}},
+                "then": {
+                    "anyOf": [
+                        {
+                            "required": [
+                                "event_names",
+                                "self_describing_event_schemas",
+                                "version",
+                                "table_name",
+                            ]
+                        },
+                        {
+                            "required": [
+                                "event_names",
+                                "context_schemas",
+                                "version",
+                                "table_name",
+                            ]
+                        },
+                        {
+                            "required": [
+                                "event_names",
+                                "event_columns",
+                                "version",
+                                "table_name",
+                            ]
+                        },
+                    ]
+                },
+                "else": {
+                    "anyOf": [
+                        {"required": ["event_names", "self_describing_event_schemas"]},
+                        {"required": ["event_names", "context_schemas"]},
+                        {"required": ["event_names", "event_columns"]},
+                    ]
+                },
+                "additionalProperties": False,
+            },
+            "minItems": 1,
+        },
+        "users": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "object",
+                    "properties": {
+                        "id_column": {
+                            "type": "string",
+                            "description": "name of column or attribute in the schema that defines your user_id, will be converted to a string in Snowflake",
+                        },
+                        "id_self_describing_event_schema": {
+                            "type": "string",
+                            "description": "`iglu:com.` type url for the self-describing event schema that your user_id column is in, used over id_context_schema if both provided",
+                        },
+                        "id_context_schema": {
+                            "type": "string",
+                            "description": "`iglu:com.` type url for the context schema that your user_id column is in",
+                        },
+                        "alias": {
+                            "type": "string",
+                            "description": "alias to apply to the id column",
+                        },
+                    },
+                    "additionalProperties": False,
+                    "required": ["id_column"],
+                },
+                "user_contexts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "description": "array of strings of iglu:com. type url(s) for the context/entities to add to your users table as columns",
+                    },
+                },
+                "user_columns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "description": "array of strings of flat column names from the events table to include in the model",
+                    },
+                },
+            },
+            "anyOf": [{"required": ["user_contexts"]}, {"required": ["user_columns"]}],
+            "additionalProperties": False,
+        },
+    },
+    "additionalProperties": False,
+    "type": "object",
+    "required": ["config", "events"],
+}
 
 config_help = """
 JSON Config file structure:
