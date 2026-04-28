@@ -180,8 +180,9 @@ if resolver_file_path != "default":
 else:
     iglu_resolver_parsed = default_resolver
 
-if not validate_json(
-    iglu_resolver_parsed.get("data"), schema=resolver_schema, validate=True
+resolver_data = iglu_resolver_parsed.get("data")
+if resolver_data is None or not validate_json(
+    resolver_data, schema=resolver_schema, validate=True
 ):
     raise ValueError(
         f"Resolver config at {resolver_file_path} is not valid, see https://docs.snowplow.io/docs/pipeline-components-and-applications/iglu/iglu-resolver/ for more details."
@@ -189,7 +190,7 @@ if not validate_json(
 
 # Loop over all registries and get the priority and list of all schemas on that registry for comparison later, store api keys as well
 verboseprint("Getting schema lists from registries...")
-for repo in iglu_resolver_parsed.get("data").get("repositories"):
+for repo in resolver_data.get("repositories"):
     # Get uri and netloc
     repo_uri = repo.get("connection").get("http").get("uri")
     parsed_uri = urlparse(repo_uri)
@@ -224,7 +225,7 @@ for i in range(len(event_names)):
     # Check if file already exists
     if not overwrite and os.path.exists(filename):
         verboseprint(f"Model {filename} already exists, skipping...")
-        next
+        continue
 
     # Continue to generate model
     verboseprint(f"Generating model for event(s) {event_name}")
@@ -257,7 +258,7 @@ for i in range(len(event_names)):
     partition_by = snowplow_utils.get_value_by_target_type(bigquery_val={{
       "field":  var("snowplow__partition_tstamp"),
       "data_type": "timestamp"
-    }}, databricks_val=rename_partition_tstamp_date()),
+    }}, databricks_val=snowplow_normalize.rename_partition_tstamp_date()),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
     tblproperties={{
       'delta.autoOptimize.optimizeWrite' : 'true',
@@ -311,7 +312,7 @@ if filtered_events_table_name is not None:
     partition_by = snowplow_utils.get_value_by_target_type(bigquery_val={{
       "field":  var("snowplow__partition_tstamp"),
       "data_type": "timestamp"
-    }}, databricks_val=rename_partition_tstamp_date()),
+    }}, databricks_val=snowplow_normalize.rename_partition_tstamp_date()),
     sql_header=snowplow_utils.set_query_tag(var('snowplow__query_tag', 'snowplow_dbt')),
     tblproperties={{
       'delta.autoOptimize.optimizeWrite' : 'true',
@@ -362,6 +363,9 @@ else:
 #######################
 if user_urls is not None or user_flat_cols is not None:
     verboseprint("Generating users table model...")
+    user_cols: list = []
+    user_keys: list = []
+    user_types: list = []
     if user_urls is not None:
         user_url_cut = [urlparse(url).path for url in user_urls]
         user_jsons = [
@@ -378,7 +382,7 @@ if user_urls is not None or user_flat_cols is not None:
                 raise ValueError(f"Validation of schema {user_urls[i]} failed.")
         # Generate final form data for insert into model
         user_cols = ["CONTEXTS_" + url_to_column(url) for url in user_url_cut]
-        user_keys = [list(user.get("properties").keys()) for user in user_jsons]
+        user_keys = [list((user.get("properties") or {}).keys()) for user in user_jsons]
         user_types = [get_types(user) for user in user_jsons]
 
         # Raise an error if user_id is in the context columns,
