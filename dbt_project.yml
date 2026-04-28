@@ -1,17 +1,14 @@
-
 name: 'snowplow_normalize'
 version: '0.4.1'
 config-version: 2
 
-require-dbt-version: [">=1.4.0", "<2.0.0"]
+require-dbt-version: [">=1.10.6", "<2.0.0"]
 
 profile: 'default'
 
 model-paths: ["models"]
 docs-paths: ["docs"]
 macro-paths: ["macros"]
-
-target-path: "target"
 clean-targets:
   - "target"
   - "dbt_packages"
@@ -66,7 +63,7 @@ on-run-end:
 models:
   snowplow_normalize:
     +materialized: table
-    +file_format:  "{{ 'delta' if target.type not in ['spark'] else 'iceberg'}}"
+    +file_format: "{{ 'delta' if target.type not in ['spark'] else 'iceberg'}}"
     +bind: false
     base:
       manifest:
@@ -74,4 +71,6 @@ models:
       scratch:
         +schema: "scratch"
         +tags: "scratch"
-        +enabled: "{{ target.type in ['bigquery', 'databricks', 'spark', 'snowflake'] | as_bool() }}"
+        +enabled: "{{ (target.type in ['bigquery', 'databricks', 'spark', 'snowflake']) | as_bool() }}"
+flags:
+  require_generic_test_arguments_property: true
