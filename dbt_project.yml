@@ -65,6 +65,9 @@ models:
     +materialized: table
     +file_format: "{{ 'delta' if target.type not in ['spark'] else 'iceberg'}}"
     +bind: false
+    +persist_docs:
+      relation: true
+      columns: true
     base:
       manifest:
         +schema: "snowplow_manifest"
